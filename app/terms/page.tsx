@@ -27,7 +27,7 @@ export default function TermsPage() {
           <section>
             <h2 className="text-2xl font-semibold mb-4">1. Acceptance of Terms</h2>
             <p className="text-gray-700 mb-4">
-              By accessing and using DearAfter Registry ("the Service"), you accept and agree to be bound by these Terms of Service ("Terms"). If you do not agree to these Terms, please do not use the Service.
+              By accessing and using DearAfter Registry (&quot;the Service&quot;), you accept and agree to be bound by these Terms of Service (&quot;Terms&quot;). If you do not agree to these Terms, please do not use the Service.
             </p>
             <p className="text-gray-700">
               We reserve the right to modify these Terms at any time. Your continued use of the Service after such modifications constitutes acceptance of the updated Terms.
@@ -47,7 +47,7 @@ export default function TermsPage() {
               <li>Receive reminders to review and update your preferences</li>
             </ul>
             <p className="text-gray-700">
-              The Service is provided "as is" and we do not guarantee that it will be uninterrupted, secure, or error-free.
+              The Service is provided &quot;as is&quot; and we do not guarantee that it will be uninterrupted, secure, or error-free.
             </p>
           </section>
 
@@ -109,7 +109,7 @@ export default function TermsPage() {
           <section>
             <h2 className="text-2xl font-semibold mb-4">7. Disclaimer of Warranties</h2>
             <p className="text-gray-700 mb-4">
-              THE SERVICE IS PROVIDED "AS IS" AND "AS AVAILABLE" WITHOUT WARRANTIES OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, OR NON-INFRINGEMENT.
+              THE SERVICE IS PROVIDED &quot;AS IS&quot; AND &quot;AS AVAILABLE&quot; WITHOUT WARRANTIES OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, OR NON-INFRINGEMENT.
             </p>
             <p className="text-gray-700">
               We do not warrant that the Service will be uninterrupted, secure, or error-free, or that defects will be corrected.

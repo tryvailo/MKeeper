@@ -308,7 +308,7 @@ export default function SettingsPage() {
                     </Button>
                   ) : (
                     <div className="space-y-4">
-                      <p className="font-medium">This really will delete everything. Are you sure? This is permanent and we can't undo it.</p>
+                      <p className="font-medium">This really will delete everything. Are you sure? This is permanent and we can&apos;t undo it.</p>
                       <div className="flex gap-4">
                         <Button variant="destructive">Yes, delete</Button>
                         <Button variant="outline" onClick={() => setShowDeleteConfirm(false)}>

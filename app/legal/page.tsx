@@ -29,14 +29,14 @@ export default function LegalPage() {
               <div>
                 <h3 className="text-lg font-semibold mb-2">What is Memory Keeper?</h3>
                 <p className="text-gray-700">
-                  Memory Keeper is a free tool for dementia families to preserve their loved one's story—who they are, what matters to them—before memories fade.
+                  Memory Keeper is a free tool for dementia families to preserve their loved one&apos;s story—who they are, what matters to them—before memories fade.
                   You can save their memories and share them with family members.
                 </p>
               </div>
               <div>
                 <h3 className="text-lg font-semibold mb-2">How is my data protected?</h3>
                 <p className="text-gray-700">
-                  All data is encrypted and accessible only to you and people you've granted access to.
+                  All data is encrypted and accessible only to you and people you&apos;ve granted access to.
                   We comply with GDPR and use industry-standard security practices.
                 </p>
               </div>

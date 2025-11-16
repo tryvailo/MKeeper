@@ -324,7 +324,7 @@ export default function OnboardingPage() {
         <Alert>
           <CheckCircle2 className="h-4 w-4" />
           <AlertDescription>
-            Your memories are safe. You can always come back to add more or edit what you've written.
+            Your memories are safe. You can always come back to add more or edit what you&apos;ve written.
           </AlertDescription>
         </Alert>
 
@@ -337,7 +337,7 @@ export default function OnboardingPage() {
             className="mt-1"
           />
           <label htmlFor="review-confirm" className="text-sm text-gray-700">
-            I've reviewed everything and it's correct
+            I&apos;ve reviewed everything and it&apos;s correct
           </label>
         </div>
 
@@ -377,10 +377,10 @@ export default function OnboardingPage() {
             </Link>
           </div>
           <h1 className="text-3xl font-bold text-gray-900 mb-2">
-            Let's capture their story
+            Let&apos;s capture their story
           </h1>
           <p className="text-gray-600 mb-8">
-            Take your time. There's no rush. You can save after each step and come back anytime.
+            Take your time. There&apos;s no rush. You can save after each step and come back anytime.
           </p>
 
           {/* Progress indicator */}

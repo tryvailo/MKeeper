@@ -201,7 +201,7 @@ export default function HelpPage() {
               />
             </div>
             <p className="text-sm text-gray-600 mt-4">
-              Can't find what you're looking for?{" "}
+              Can&apos;t find what you&apos;re looking for?{" "}
               <Link href="#contact" className="text-brand-blue hover:underline">
                 Contact Support
               </Link>
@@ -264,7 +264,7 @@ export default function HelpPage() {
                 <Button type="submit">Send Message</Button>
               </form>
               <p className="text-xs text-gray-500 mt-2">
-                We'll reply within 24 hours
+                We&apos;ll reply within 24 hours
               </p>
             </div>
           </CardContent>

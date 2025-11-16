@@ -42,10 +42,10 @@ export default function OnboardingCompletePage() {
             Your story, captured
           </h1>
           <p className="text-xl text-gray-600 mb-2">
-            Well done. You've captured something precious.
+            Well done. You&apos;ve captured something precious.
           </p>
           <p className="text-gray-500">
-            You've answered 32 questions across 5 categories. Their voice, their values, who they are—it's all safe now. Here's what you can do next:
+            You&apos;ve answered 32 questions across 5 categories. Their voice, their values, who they are—it&apos;s all safe now. Here&apos;s what you can do next:
           </p>
         </div>
 

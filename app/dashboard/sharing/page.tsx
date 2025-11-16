@@ -454,7 +454,7 @@ export default function SharingPage() {
               <CardHeader>
                 <CardTitle>Invite via Email</CardTitle>
                 <CardDescription>
-                  Send a secure invitation email. They'll receive a private link to view their story.
+                  Send a secure invitation email. They&apos;ll receive a private link to view their story.
                 </CardDescription>
               </CardHeader>
               <CardContent>

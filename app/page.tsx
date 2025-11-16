@@ -476,7 +476,7 @@ export default function LandingPage() {
                   <a href="#" className="text-gray-600 hover:text-gray-900">Dementia awareness</a>
                 </li>
                 <li>
-                  <a href="#" className="text-gray-600 hover:text-gray-900">Alzheimer's Society</a>
+                  <a href="#" className="text-gray-600 hover:text-gray-900">Alzheimer&apos;s Society</a>
                 </li>
                 <li>
                   <a href="#" className="text-gray-600 hover:text-gray-900">Family support groups</a>
