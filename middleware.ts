@@ -9,11 +9,15 @@ const isPublicRoute = createRouteMatcher([
   "/share(.*)",
   "/sign-in(.*)",
   "/sign-up(.*)",
+  "/contact",
+  "/help",
+  "/privacy",
+  "/terms",
 ]);
 
-export default clerkMiddleware((auth, req) => {
+export default clerkMiddleware(async (auth, req) => {
   if (!isPublicRoute(req)) {
-    auth().protect();
+    await auth.protect();
   }
 });
 
