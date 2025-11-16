@@ -3,6 +3,8 @@ import path from "path";
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
 
+export const dynamic = 'force-dynamic';
+
 const DATA_DIR = path.join(process.cwd(), "data");
 const FAMILY_MEMBERS_FILE = path.join(DATA_DIR, "family_members.json");
 

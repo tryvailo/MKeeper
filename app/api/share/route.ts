@@ -4,6 +4,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
 import crypto from "crypto";
 
+export const dynamic = 'force-dynamic';
+
 const DATA_DIR = path.join(process.cwd(), "data");
 const SHARED_ACCESS_FILE = path.join(DATA_DIR, "shared_access.json");
 

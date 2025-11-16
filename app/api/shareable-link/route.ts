@@ -4,6 +4,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
 import { createShareableLink, isLinkValid, extendShareableLink, generateShareableURL, getExpirationMessage } from "@/lib/shareable-links";
 
+export const dynamic = 'force-dynamic';
+
 const DATA_DIR = path.join(process.cwd(), "data");
 const SHAREABLE_LINKS_FILE = path.join(DATA_DIR, "shareable_links.json");
 

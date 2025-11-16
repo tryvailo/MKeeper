@@ -2,6 +2,8 @@ import { promises as fs } from "fs";
 import path from "path";
 import { NextRequest, NextResponse } from "next/server";
 
+export const dynamic = 'force-dynamic';
+
 const DATA_DIR = path.join(process.cwd(), "data");
 const FAMILY_MEMBERS_FILE = path.join(DATA_DIR, "family_members.json");
 

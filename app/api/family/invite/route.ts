@@ -5,6 +5,8 @@ import { auth, currentUser } from "@clerk/nextjs/server";
 import crypto from "crypto";
 import { sendShareInviteEmail } from "@/lib/email";
 
+export const dynamic = 'force-dynamic';
+
 const DATA_DIR = path.join(process.cwd(), "data");
 const FAMILY_MEMBERS_FILE = path.join(DATA_DIR, "family_members.json");
 const SHARED_ACCESS_FILE = path.join(DATA_DIR, "shared_access.json");

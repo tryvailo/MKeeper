@@ -4,6 +4,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
 import { UserPreferences } from "@/lib/supabase";
 
+export const dynamic = 'force-dynamic';
+
 const DATA_DIR = path.join(process.cwd(), "data");
 const PREFERENCES_FILE = path.join(DATA_DIR, "preferences.json");
 const ACTIVITY_FILE = path.join(DATA_DIR, "activity.json");

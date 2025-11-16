@@ -3,6 +3,8 @@ import path from "path";
 import { NextRequest, NextResponse } from "next/server";
 import { isLinkValid } from "@/lib/shareable-links";
 
+export const dynamic = 'force-dynamic';
+
 const DATA_DIR = path.join(process.cwd(), "data");
 const SHAREABLE_LINKS_FILE = path.join(DATA_DIR, "shareable_links.json");
 const PREFERENCES_FILE = path.join(DATA_DIR, "preferences.json");

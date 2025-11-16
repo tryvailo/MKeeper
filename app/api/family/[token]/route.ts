@@ -2,6 +2,8 @@ import { promises as fs } from "fs";
 import path from "path";
 import { NextRequest, NextResponse } from "next/server";
 
+export const dynamic = 'force-dynamic';
+
 const DATA_DIR = path.join(process.cwd(), "data");
 const PREFERENCES_FILE = path.join(DATA_DIR, "preferences.json");
 const SHARED_ACCESS_FILE = path.join(DATA_DIR, "shared_access.json");
