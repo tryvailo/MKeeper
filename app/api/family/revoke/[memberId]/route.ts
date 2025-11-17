@@ -28,8 +28,13 @@ async function readFamilyMembers() {
 }
 
 async function writeFamilyMembers(data: any[]) {
-  await ensureDataDir();
-  await fs.writeFile(FAMILY_MEMBERS_FILE, JSON.stringify(data, null, 2), "utf-8");
+  try {
+    await ensureDataDir();
+    await fs.writeFile(FAMILY_MEMBERS_FILE, JSON.stringify(data, null, 2), "utf-8");
+  } catch (error) {
+    // Ignore file write errors (filesystem not available on Vercel)
+    console.warn("File write failed (expected on Vercel):", error);
+  }
 }
 
 async function readSharedAccess() {
@@ -43,8 +48,13 @@ async function readSharedAccess() {
 }
 
 async function writeSharedAccess(data: any[]) {
-  await ensureDataDir();
-  await fs.writeFile(SHARED_ACCESS_FILE, JSON.stringify(data, null, 2), "utf-8");
+  try {
+    await ensureDataDir();
+    await fs.writeFile(SHARED_ACCESS_FILE, JSON.stringify(data, null, 2), "utf-8");
+  } catch (error) {
+    // Ignore file write errors (filesystem not available on Vercel)
+    console.warn("File write failed (expected on Vercel):", error);
+  }
 }
 
 // DELETE /api/family/revoke/:memberId - Revoke access

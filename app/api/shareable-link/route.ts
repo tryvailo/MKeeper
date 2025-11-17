@@ -31,8 +31,13 @@ async function readShareableLinks() {
 
 // Write shareable links to file
 async function writeShareableLinks(data: any[]) {
-  await ensureDataDir();
-  await fs.writeFile(SHAREABLE_LINKS_FILE, JSON.stringify(data, null, 2), "utf-8");
+  try {
+    await ensureDataDir();
+    await fs.writeFile(SHAREABLE_LINKS_FILE, JSON.stringify(data, null, 2), "utf-8");
+  } catch (error) {
+    // Ignore file write errors (filesystem not available on Vercel)
+    console.warn("File write failed (expected on Vercel):", error);
+  }
 }
 
 // GET /api/shareable-link - Get all shareable links for user

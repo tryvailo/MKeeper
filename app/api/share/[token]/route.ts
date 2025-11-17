@@ -68,7 +68,12 @@ export async function GET(
     // Update access count and last accessed
     link.access_count = (link.access_count || 0) + 1;
     link.last_accessed_at = new Date().toISOString();
-    await fs.writeFile(SHAREABLE_LINKS_FILE, JSON.stringify(links, null, 2), "utf-8");
+    try {
+      await fs.writeFile(SHAREABLE_LINKS_FILE, JSON.stringify(links, null, 2), "utf-8");
+    } catch (error) {
+      // Ignore file write errors (filesystem not available on Vercel)
+      console.warn("File write failed (expected on Vercel):", error);
+    }
 
     // Get user preferences (interview data)
     const preferences = await readPreferences();

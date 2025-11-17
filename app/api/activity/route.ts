@@ -30,8 +30,13 @@ async function readActivity() {
 
 // Write activity logs to file
 async function writeActivity(data: any[]) {
-  await ensureDataDir();
-  await fs.writeFile(ACTIVITY_FILE, JSON.stringify(data, null, 2), "utf-8");
+  try {
+    await ensureDataDir();
+    await fs.writeFile(ACTIVITY_FILE, JSON.stringify(data, null, 2), "utf-8");
+  } catch (error) {
+    // Ignore file write errors (filesystem not available on Vercel)
+    console.warn("File write failed (expected on Vercel):", error);
+  }
 }
 
 export async function GET(request: NextRequest) {
