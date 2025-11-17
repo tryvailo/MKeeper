@@ -1,7 +1,8 @@
 import { promises as fs } from "fs";
 import path from "path";
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@clerk/nextjs/server";
+// TEMPORARILY DISABLED: Clerk disabled for testing
+// import { auth } from "@clerk/nextjs/server";
 
 export const dynamic = 'force-dynamic';
 
@@ -41,10 +42,12 @@ async function writeActivity(data: any[]) {
 
 export async function POST(request: NextRequest) {
   try {
-    const { userId } = await auth();
-    if (!userId) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+    // TEMPORARILY DISABLED: No auth required for testing
+    // const { userId } = await auth();
+    // if (!userId) {
+    //   return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    // }
+    const userId = "temp-user"; // Temporary mock user ID
 
     const { action, details } = await request.json();
 
