@@ -43,9 +43,6 @@ async function writeShareableLinks(data: any[]) {
 export async function GET(request: NextRequest) {
   try {
     const userId = "temp-user"; // Temporary mock user ID
-    if (!userId) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
 
     const links = await readShareableLinks();
     const userLinks = links
@@ -68,9 +65,6 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const userId = "temp-user"; // Temporary mock user ID
-    if (!userId) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
 
     const links = await readShareableLinks();
     const newLink = createShareableLink(userId);
@@ -96,9 +90,6 @@ export async function POST(request: NextRequest) {
 export async function PATCH(request: NextRequest) {
   try {
     const userId = "temp-user"; // Temporary mock user ID
-    if (!userId) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
 
     const { linkId, action } = await request.json();
 

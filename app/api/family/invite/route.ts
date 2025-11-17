@@ -61,10 +61,7 @@ async function writeSharedAccess(data: any[]) {
 // POST /api/family/invite - Send invite email
 export async function POST(request: NextRequest) {
   try {
-    const { userId } = await auth();
-    if (!userId) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+    const userId = "temp-user"; // Temporary mock user ID
 
     const { preferenceId, email, name, relationship, accessLevel } = await request.json();
 
@@ -109,7 +106,7 @@ export async function POST(request: NextRequest) {
     // Get inviter name from Clerk
     let inviterName = "Someone";
     try {
-      const user = await currentUser();
+      const user = { id: "temp-user", firstName: "Guest", fullName: "Guest User", emailAddresses: [{ emailAddress: "guest@example.com" }] }; // Temporary mock user
       if (user) {
         inviterName = user.firstName || user.fullName || user.emailAddresses[0]?.emailAddress?.split("@")[0] || "Someone";
       }

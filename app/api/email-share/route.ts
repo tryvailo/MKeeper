@@ -8,9 +8,6 @@ export const dynamic = 'force-dynamic';
 export async function POST(request: NextRequest) {
   try {
     const userId = "temp-user"; // Temporary mock user ID
-    if (!userId) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
 
     const { interviewData, recipientEmails, senderName, sendEmails = false } = await request.json();
 
