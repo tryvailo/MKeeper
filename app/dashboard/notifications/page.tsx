@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useUser } from "@clerk/nextjs";
 import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -21,7 +20,8 @@ import { Notification } from "@/lib/supabase";
 import { MemoryKeeperLogo } from "@/components/icons";
 
 export default function NotificationsPage() {
-  const { user } = useUser();
+  // const { user } = useUser();
+  const user = { id: "temp-user", firstName: "Guest", fullName: "Guest User" };
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [filter, setFilter] = useState<"all" | "unread" | "read">("all");
   const [loading, setLoading] = useState(true);

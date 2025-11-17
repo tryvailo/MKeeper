@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useUser } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Preferences, ActivityLog } from "@/lib/supabase";
@@ -31,7 +30,9 @@ import {
 import { MemoryKeeperLogo } from "@/components/icons";
 
 export default function DashboardPage() {
-  const { user, isLoaded } = useUser();
+  // const { user, isLoaded } = useUser();
+  const user = { id: "temp-user", firstName: "Guest", fullName: "Guest User" }; // Temporary mock user
+  const isLoaded = true; // Temporary: always loaded
   const router = useRouter();
   const [preferences, setPreferences] = useState<MemoryPreferences | null>(null);
   const [activityLogs, setActivityLogs] = useState<ActivityLog[]>([]);
@@ -41,18 +42,19 @@ export default function DashboardPage() {
   const [showWelcome, setShowWelcome] = useState(true);
 
   useEffect(() => {
-    if (isLoaded && !user) {
-      router.push("/sign-in");
-      return;
-    }
+    // TEMPORARILY DISABLED: No auth check
+    // if (isLoaded && !user) {
+    //   router.push("/sign-in");
+    //   return;
+    // }
 
-    if (user) {
-      loadData();
-    }
-  }, [isLoaded, user, router]);
+    // Always load data (no auth required)
+    loadData();
+  }, []);
 
   const loadData = async () => {
-    if (!user?.id) return;
+    // TEMPORARILY DISABLED: No auth check
+    // if (!user?.id) return;
 
     setLoading(true);
     try {

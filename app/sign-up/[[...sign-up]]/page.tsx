@@ -3,8 +3,6 @@
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 
-// TEMPORARILY DISABLED: Clerk disabled for testing
-// import { SignUp } from "@clerk/nextjs";
 
 export default function SignUpPage() {
   const router = useRouter();

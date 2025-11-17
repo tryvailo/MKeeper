@@ -1,8 +1,6 @@
 import { promises as fs } from "fs";
 import path from "path";
 import { NextRequest, NextResponse } from "next/server";
-// TEMPORARILY DISABLED: Clerk disabled for testing
-// import { auth } from "@clerk/nextjs/server";
 import { UserPreferences } from "@/lib/supabase";
 
 export const dynamic = 'force-dynamic';

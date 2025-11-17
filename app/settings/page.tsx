@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useUser } from "@clerk/nextjs";
 import Link from "next/link";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -21,7 +20,13 @@ import {
 import { MemoryKeeperLogo } from "@/components/icons";
 
 export default function SettingsPage() {
-  const { user } = useUser();
+  // const { user } = useUser();
+  const user = { 
+    id: "temp-user", 
+    firstName: "Guest", 
+    fullName: "Guest User",
+    primaryEmailAddress: { emailAddress: "guest@example.com" }
+  };
   const [activeTab, setActiveTab] = useState("account");
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 

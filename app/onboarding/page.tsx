@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { useUser } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { UserPreferences } from "@/lib/supabase";
@@ -24,7 +23,9 @@ import { ArrowLeft, Clock, CheckCircle2, AlertCircle } from "lucide-react";
 const TOTAL_STEPS = 6; // 5 categories + Review
 
 export default function OnboardingPage() {
-  const { user, isLoaded } = useUser();
+  // const { user, isLoaded } = useUser();
+  const user = { id: "temp-user", firstName: "Guest", fullName: "Guest User" };
+  const isLoaded = true;
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [step, setStep] = useState<InterviewStep>(1);
@@ -37,10 +38,11 @@ export default function OnboardingPage() {
   const [elapsedTime, setElapsedTime] = useState(0);
 
   useEffect(() => {
-    if (isLoaded && !user) {
-      router.push("/sign-in");
-    }
-  }, [isLoaded, user, router]);
+    // TEMPORARILY DISABLED: No auth check
+    // if (isLoaded && !user) {
+    //   router.push("/sign-in");
+    // }
+  }, []);
 
   // Timer effect
   useEffect(() => {

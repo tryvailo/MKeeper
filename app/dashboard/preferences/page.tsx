@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useUser } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { MemoryPreferences, calculateInterviewStats } from "@/lib/memory-data";
@@ -14,22 +13,24 @@ import { ArrowLeft, Share2, FileText, Heart, BookOpen, Sparkles, MessageSquare }
 import { MemoryKeeperLogo } from "@/components/icons";
 
 export default function PreferencesPage() {
-  const { user, isLoaded } = useUser();
+  // const { user, isLoaded } = useUser();
+  const user = { id: "temp-user", firstName: "Guest", fullName: "Guest User" };
+  const isLoaded = true;
   const router = useRouter();
   const [preferences, setPreferences] = useState<MemoryPreferences | null>(null);
   const [loading, setLoading] = useState(true);
   const [pdfGenerating, setPdfGenerating] = useState(false);
 
   useEffect(() => {
-    if (isLoaded && !user) {
-      router.push("/sign-in");
-      return;
-    }
+    // TEMPORARILY DISABLED: No auth check
+    // if (isLoaded && !user) {
+    //   router.push("/sign-in");
+    //   return;
+    // }
 
-    if (user) {
-      loadPreferences();
-    }
-  }, [isLoaded, user, router]);
+    // Always load preferences
+    loadPreferences();
+  }, []);
 
   const loadPreferences = async () => {
     try {
