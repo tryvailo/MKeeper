@@ -1,7 +1,6 @@
 import { promises as fs } from "fs";
 import path from "path";
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@clerk/nextjs/server";
 import crypto from "crypto";
 
 export const dynamic = 'force-dynamic';
