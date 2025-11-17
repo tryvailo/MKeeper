@@ -10,7 +10,7 @@ export default function LegalPage() {
           <div className="flex justify-between items-center">
             <Link href="/" className="flex items-center gap-2 text-2xl font-bold text-gray-900">
               <MemoryKeeperLogo size={28} className="text-brand-blue" strokeWidth={2} />
-              Memory Keeper
+              Legacy Words
             </Link>
             <Link href="/" className="text-gray-700 hover:text-gray-900">
               Home
@@ -27,9 +27,9 @@ export default function LegalPage() {
             <h2 className="text-2xl font-semibold mb-4">FAQ</h2>
             <div className="space-y-6">
               <div>
-                <h3 className="text-lg font-semibold mb-2">What is Memory Keeper?</h3>
+                <h3 className="text-lg font-semibold mb-2">What is Legacy Words?</h3>
                 <p className="text-gray-700">
-                  Memory Keeper is a free tool for dementia families to preserve their loved one&apos;s story—who they are, what matters to them—before memories fade.
+                  Legacy Words is a free tool for dementia families to preserve their loved one&apos;s story—who they are, what matters to them—before memories fade.
                   You can save their memories and share them with family members.
                 </p>
               </div>

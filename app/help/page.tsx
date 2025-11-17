@@ -17,24 +17,24 @@ export default function HelpPage() {
       title: "General",
       items: [
         {
-          q: "What is Memory Keeper?",
-          a: "Memory Keeper is a free online tool to help dementia families capture their loved one's story—who they are, what matters to them, their memories—before dementia takes those memories away. It helps preserve their voice, values, and personality for family to treasure forever.",
+          q: "What is Legacy Words?",
+          a: "Legacy Words is a free online tool to help dementia families capture their loved one's story—who they are, what matters to them, their memories—before dementia takes those memories away. It helps preserve their voice, values, and personality for family to treasure forever.",
         },
         {
           q: "Is this a medical thing? Will it help with dementia?",
-          a: "No. Memory Keeper isn't treatment or therapy (though many families find it therapeutic). It's simply a way to capture their story—who they are, what matters to them—while they can still tell you clearly. Think of it like recording a video before a surgery: it's not the surgery, but it matters to have it just in case. If you're looking for medical support, talk to your GP or contact the Alzheimer's Society. We're here to help with the human side: preserving their voice, their values, their essence.",
+          a: "No. Legacy Words isn't treatment or therapy (though many families find it therapeutic). It's simply a way to capture their story—who they are, what matters to them—while they can still tell you clearly. Think of it like recording a video before a surgery: it's not the surgery, but it matters to have it just in case. If you're looking for medical support, talk to your GP or contact the Alzheimer's Society. We're here to help with the human side: preserving their voice, their values, their essence.",
         },
         {
-          q: "Who should use Memory Keeper?",
-          a: "Dementia families who want to preserve their loved one's story while they can still share it. It's especially helpful in early stages, when they can still tell coherent stories. But even if you're further along, family members can use Memory Keeper to document stories about them.",
+          q: "Who should use Legacy Words?",
+          a: "Dementia families who want to preserve their loved one's story while they can still share it. It's especially helpful in early stages, when they can still tell coherent stories. But even if you're further along, family members can use Legacy Words to document stories about them.",
         },
         {
           q: "How much does it cost?",
-          a: "Memory Keeper is completely free. Always will be. No payment ever. No hidden fees. No catches.",
+          a: "Legacy Words is completely free. Always will be. No payment ever. No hidden fees. No catches.",
         },
         {
           q: "Will this always be free?",
-          a: "Yes. Memory Keeper is completely free for dementia families. Always will be. No payment ever. No hidden fees. No catches. We believe preserving memories shouldn't cost anything—especially when families are already dealing with so much.",
+          a: "Yes. Legacy Words is completely free for dementia families. Always will be. No payment ever. No hidden fees. No catches. We believe preserving memories shouldn't cost anything—especially when families are already dealing with so much.",
         },
       ],
     },
@@ -46,7 +46,7 @@ export default function HelpPage() {
           a: "We take privacy seriously. Your data is encrypted, stored on secure UK servers, and complies fully with GDPR. You can download or delete all your data anytime. We don't sell your information. We don't share it with anyone. Full stop.",
         },
         {
-          q: "Is Memory Keeper GDPR compliant?",
+          q: "Is Legacy Words GDPR compliant?",
           a: "Yes, we fully comply with GDPR regulations. You have the right to access, modify, or delete your data at any time.",
         },
         {
@@ -54,13 +54,13 @@ export default function HelpPage() {
           a: "Only people you invite. No one else can see their memories. We don't share your data with third parties.",
         },
         {
-          q: "Can Memory Keeper employees see my data?",
+          q: "Can Legacy Words employees see my data?",
           a: "No, not without explicit permission for support issues. All data is encrypted and access is strictly controlled.",
         },
       ],
     },
     {
-      title: "Using Memory Keeper",
+      title: "Using Legacy Words",
       items: [
         {
           q: "How do I capture their story?",
@@ -101,7 +101,7 @@ export default function HelpPage() {
       items: [
         {
           q: "My parent is in advanced dementia. Is it too late?",
-          a: "It depends. If they can still have conversations—even brief ones—it's never too late. You can work with them at their pace. But honestly? The best time is early on, when they're most clear. If you're just diagnosed, we'd suggest starting soon while you can still hear their full stories. If you're further along, you can still use Memory Keeper with family members telling stories *about* them. Not ideal, but something.",
+          a: "It depends. If they can still have conversations—even brief ones—it's never too late. You can work with them at their pace. But honestly? The best time is early on, when they're most clear. If you're just diagnosed, we'd suggest starting soon while you can still hear their full stories. If you're further along, you can still use Legacy Words with family members telling stories *about* them. Not ideal, but something.",
         },
         {
           q: "How long does this take? I'm exhausted.",
@@ -155,7 +155,7 @@ export default function HelpPage() {
           a: "Email support@memorykeeper.app. We typically reply within 24-48 hours. We're here to help dementia families preserve what matters most.",
         },
         {
-          q: "Do I need to be worried or sad using Memory Keeper?",
+          q: "Do I need to be worried or sad using Legacy Words?",
           a: "No. We designed this for families who want to preserve what matters while they can. Some use it together (a beautiful conversation). Some do it quietly on their own. Either way, it feels less like planning for loss and more like capturing love. You're preserving their essence. That's a gift.",
         },
       ],

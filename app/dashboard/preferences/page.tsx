@@ -85,7 +85,7 @@ export default function PreferencesPage() {
                 <ArrowLeft className="h-5 w-5 text-gray-600" />
               </Link>
               <MemoryKeeperLogo size={28} className="text-brand-blue" strokeWidth={2} />
-              <h1 className="text-xl font-bold">Memory Keeper</h1>
+              <h1 className="text-xl font-bold">Legacy Words</h1>
             </div>
           </div>
         </header>

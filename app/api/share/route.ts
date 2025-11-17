@@ -65,7 +65,7 @@ export async function POST(request: NextRequest) {
     await writeSharedAccess(sharedAccess);
 
     // Generate access link
-    const shareUrl = `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/family/${accessToken}`;
+    const shareUrl = `${process.env.NEXT_PUBLIC_APP_URL || "https://legacywords.co.uk"}/family/${accessToken}`;
 
     // TODO: Send email with link (can use Resend, SendGrid, etc.)
     // For now, just return the link

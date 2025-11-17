@@ -226,11 +226,11 @@ export default function SettingsPage() {
                     <div className="flex items-center justify-between mb-4">
                       <div>
                         <p className="text-2xl font-bold">Free</p>
-                        <p className="text-sm text-gray-600">Memory Keeper is completely free. Always will be.</p>
+                        <p className="text-sm text-gray-600">Legacy Words is completely free. Always will be.</p>
                       </div>
                     </div>
                     <p className="text-sm text-gray-600">
-                      Memory Keeper is a free service for dementia families. There are no charges, no subscriptions, and no hidden fees.
+                      Legacy Words is a free service for dementia families. There are no charges, no subscriptions, and no hidden fees.
                     </p>
                   </CardContent>
                 </Card>

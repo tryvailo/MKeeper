@@ -1,10 +1,10 @@
-# Memory Keeper
+# Legacy Words
 
 A free online tool for dementia families to preserve their loved one's story—who they are, what matters to them—before memories fade.
 
 ## Overview
 
-Memory Keeper helps families capture and preserve memories through a guided 32-question interview (35-40 minutes) across 5 categories:
+Legacy Words helps families capture and preserve memories through a guided 32-question interview (35-40 minutes) across 5 categories:
 - Memories That Matter
 - Family & Relationships
 - Values & Wisdom
@@ -72,7 +72,7 @@ Open [http://localhost:3000](http://localhost:3000) in your browser.
 ## Project Structure
 
 ```
-MemoryKeeper/
+LegacyWords/
 ├── app/                    # Next.js App Router
 │   ├── api/                # API routes
 │   │   ├── preferences/    # Preferences CRUD
@@ -185,4 +185,4 @@ Private - All rights reserved
 
 ## Support
 
-For support, email support@memorykeeper.app
+For support, email support@legacywords.app
