@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -13,7 +13,7 @@ import {
 } from "lucide-react";
 import { MemoryKeeperLogo } from "@/components/icons";
 
-export default function OnboardingCompletePage() {
+function OnboardingCompleteContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const fromOnboarding = searchParams.get("from") === "onboarding";
@@ -109,6 +109,20 @@ export default function OnboardingCompletePage() {
         </p>
       </div>
     </div>
+  );
+}
+
+export default function OnboardingCompletePage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-gray-600">Loading...</p>
+        </div>
+      </div>
+    }>
+      <OnboardingCompleteContent />
+    </Suspense>
   );
 }
 
