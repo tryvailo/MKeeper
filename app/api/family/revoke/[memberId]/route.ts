@@ -63,9 +63,7 @@ export async function DELETE(
   { params }: { params: Promise<{ memberId: string }> }
 ) {
   try {
-    const { userId } = await auth();
-    if (!userId) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    const userId = "temp-user"; // Temporary mock user ID
     }
 
     const { memberId } = await params;

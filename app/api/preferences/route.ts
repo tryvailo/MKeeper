@@ -65,9 +65,7 @@ async function writeActivity(data: any[]) {
 export async function GET(request: NextRequest) {
   try {
     // TEMPORARILY DISABLED: No auth required for testing
-    // const { userId } = await auth();
-    // if (!userId) {
-    //   return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    // const userId = "temp-user"; // Temporary mock user ID
     // }
     const userId = "temp-user"; // Temporary mock user ID
 
@@ -84,9 +82,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     // TEMPORARILY DISABLED: No auth required for testing
-    // const { userId } = await auth();
-    // if (!userId) {
-    //   return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    // const userId = "temp-user"; // Temporary mock user ID
     // }
     const userId = "temp-user"; // Temporary mock user ID
 
