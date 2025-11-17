@@ -157,7 +157,7 @@ export default function DashboardPage() {
           <div className="flex justify-between items-center">
             <Link href="/" className="flex items-center gap-2 text-2xl font-bold text-gray-900">
               <MemoryKeeperLogo size={28} className="text-brand-blue" strokeWidth={2} />
-              Memory Keeper
+              Legacy Words
             </Link>
             <div className="flex items-center gap-4">
               <Link href="/help">

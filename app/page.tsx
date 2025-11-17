@@ -45,7 +45,7 @@ export default function LandingPage() {
           <div className="flex justify-between items-center py-4">
             <Link href="/" className="flex items-center gap-2 text-2xl font-bold text-gray-900">
               <MemoryKeeperLogo size={32} className="text-brand-blue" strokeWidth={2} />
-              Memory Keeper
+              Legacy Words
             </Link>
             <nav className="hidden md:flex items-center gap-6">
               <Link href="#how-it-works" className="text-gray-700 hover:text-gray-900">
@@ -123,7 +123,7 @@ export default function LandingPage() {
       <section id="why" className="bg-white py-24 md:py-32">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
-            <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">Why Memory Keeper?</h2>
+            <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">Why Legacy Words?</h2>
             <p className="text-lg text-gray-600 max-w-2xl mx-auto">
               The problem is real. The solution is simple.
             </p>
@@ -155,7 +155,7 @@ export default function LandingPage() {
               </CardHeader>
               <CardContent>
                 <p className="text-gray-600 leading-relaxed text-center">
-                  Yes, they want to know what kind of funeral. But they NEED to know why. What mattered to them. Who they were. How to celebrate them properly. That&apos;s what you give them with Memory Keeper.
+                  Yes, they want to know what kind of funeral. But they NEED to know why. What mattered to them. Who they were. How to celebrate them properly. That&apos;s what you give them with Legacy Words.
                 </p>
               </CardContent>
             </Card>
@@ -203,7 +203,7 @@ export default function LandingPage() {
               </CardHeader>
               <CardContent>
                 <p className="text-gray-700 leading-relaxed text-center">
-                  Memory Keeper guides them through 32 guided questions. Not clinical. Not scary. Just a conversation: &apos;What&apos;s your happiest memory?&apos; &apos;Who means the most to you?&apos; &apos;What are you proud of?&apos; It&apos;s therapy. It&apos;s love. It&apos;s capturing who they really are.
+                  Legacy Words guides them through 32 guided questions. Not clinical. Not scary. Just a conversation: &apos;What&apos;s your happiest memory?&apos; &apos;Who means the most to you?&apos; &apos;What are you proud of?&apos; It&apos;s therapy. It&apos;s love. It&apos;s capturing who they really are.
                 </p>
               </CardContent>
             </Card>
@@ -325,7 +325,7 @@ export default function LandingPage() {
                   </div>
                   <h3 className="text-2xl md:text-3xl font-bold text-gray-900 mb-3">Early User Stories</h3>
                   <p className="text-gray-600 text-base max-w-xl mx-auto">
-                    Be one of the first to share how Memory Keeper helped preserve your family&apos;s stories.
+                    Be one of the first to share how Legacy Words helped preserve your family&apos;s stories.
                   </p>
                 </div>
                 
@@ -373,7 +373,7 @@ export default function LandingPage() {
           </div>
           <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6">This is always free. Always will be.</h2>
           <p className="text-xl text-gray-600 mb-10 max-w-2xl mx-auto leading-relaxed">
-            Memory Keeper is completely free for dementia families. No payment ever. No hidden fees. No catches.
+            Legacy Words is completely free for dementia families. No payment ever. No hidden fees. No catches.
           </p>
           <Link href="/sign-up">
             <Button size="lg" className="text-lg px-10 py-7 h-auto shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105">
@@ -389,20 +389,20 @@ export default function LandingPage() {
           <div className="text-center mb-16">
             <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">Questions? We Have Answers</h2>
             <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-              Everything you need to know about Memory Keeper
+              Everything you need to know about Legacy Words
             </p>
           </div>
           <Accordion type="single" collapsible className="w-full space-y-4">
             <AccordionItem value="item-1" className="border border-gray-200 rounded-lg px-6 py-2 hover:border-brand-blue/30 transition-colors">
               <AccordionTrigger className="text-left font-semibold text-lg py-4">Is this a medical thing? Will it help with dementia?</AccordionTrigger>
               <AccordionContent className="text-gray-600 leading-relaxed pb-4">
-                No. Memory Keeper isn&apos;t treatment or therapy (though many families find it therapeutic). It&apos;s simply a way to capture their story—who they are, what matters to them—while they can still tell you clearly. Think of it like recording a video before a surgery: it&apos;s not the surgery, but it matters to have it just in case. If you&apos;re looking for medical support, talk to your GP or contact the Alzheimer&apos;s Society. We&apos;re here to help with the human side: preserving their voice, their values, their essence.
+                No. Legacy Words isn&apos;t treatment or therapy (though many families find it therapeutic). It&apos;s simply a way to capture their story—who they are, what matters to them—while they can still tell you clearly. Think of it like recording a video before a surgery: it&apos;s not the surgery, but it matters to have it just in case. If you&apos;re looking for medical support, talk to your GP or contact the Alzheimer&apos;s Society. We&apos;re here to help with the human side: preserving their voice, their values, their essence.
               </AccordionContent>
             </AccordionItem>
             <AccordionItem value="item-2" className="border border-gray-200 rounded-lg px-6 py-2 hover:border-brand-blue/30 transition-colors">
               <AccordionTrigger className="text-left font-semibold text-lg py-4">My parent is in advanced dementia. Is it too late?</AccordionTrigger>
               <AccordionContent className="text-gray-600 leading-relaxed pb-4">
-                It depends. If they can still have conversations—even brief ones—it&apos;s never too late. You can work with them at their pace. But honestly? The best time is early on, when they&apos;re most clear. If you&apos;re just diagnosed, we&apos;d suggest starting soon while you can still hear their full stories. If you&apos;re further along, you can still use Memory Keeper with family members telling stories *about* them. Not ideal, but something.
+                It depends. If they can still have conversations—even brief ones—it&apos;s never too late. You can work with them at their pace. But honestly? The best time is early on, when they&apos;re most clear. If you&apos;re just diagnosed, we&apos;d suggest starting soon while you can still hear their full stories. If you&apos;re further along, you can still use Legacy Words with family members telling stories *about* them. Not ideal, but something.
               </AccordionContent>
             </AccordionItem>
             <AccordionItem value="item-3" className="border border-gray-200 rounded-lg px-6 py-2 hover:border-brand-blue/30 transition-colors">
@@ -432,7 +432,7 @@ export default function LandingPage() {
             <AccordionItem value="item-7" className="border border-gray-200 rounded-lg px-6 py-2 hover:border-brand-blue/30 transition-colors">
               <AccordionTrigger className="text-left font-semibold text-lg py-4">Will this always be free?</AccordionTrigger>
               <AccordionContent className="text-gray-600 leading-relaxed pb-4">
-                Yes. Memory Keeper is completely free for dementia families. Always will be. No payment ever. No hidden fees. No catches. We believe preserving memories shouldn&apos;t cost anything—especially when families are already dealing with so much.
+                Yes. Legacy Words is completely free for dementia families. Always will be. No payment ever. No hidden fees. No catches. We believe preserving memories shouldn&apos;t cost anything—especially when families are already dealing with so much.
               </AccordionContent>
             </AccordionItem>
           </Accordion>
@@ -444,9 +444,9 @@ export default function LandingPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
           <div className="grid md:grid-cols-4 gap-8">
             <div>
-              <h3 className="font-semibold mb-4">Memory Keeper</h3>
+              <h3 className="font-semibold mb-4">Legacy Words</h3>
               <p className="text-sm text-gray-600">
-                Memory Keeper helps dementia families preserve what matters before memories fade. Free, private, forever.
+                Legacy Words helps dementia families preserve what matters before memories fade. Free, private, forever.
               </p>
             </div>
             <div>
@@ -497,7 +497,7 @@ export default function LandingPage() {
             </div>
           </div>
           <div className="border-t border-gray-200 mt-8 pt-8 text-center text-sm text-gray-600">
-            © 2025 Memory Keeper. All rights reserved.
+            © 2025 Legacy Words. All rights reserved.
           </div>
         </div>
       </footer>

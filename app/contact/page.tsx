@@ -180,7 +180,7 @@ export default function ContactPage() {
                       required
                       value={formData.subject}
                       onChange={(e) => setFormData({ ...formData, subject: e.target.value })}
-                      placeholder="e.g., Question about Memory Keeper, Technical issue"
+                      placeholder="e.g., Question about Legacy Words, Technical issue"
                       className="mt-1"
                     />
                   </div>

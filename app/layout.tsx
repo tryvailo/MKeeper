@@ -6,7 +6,7 @@ import "./globals.css";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "Memory Keeper - Save their story before memories fade",
+  title: "Legacy Words - Save their story before memories fade",
   description: "A free tool for dementia families to capture their loved one's story—who they are, what matters to them—before memories fade. Share with family. Keep safe forever.",
 };
 

@@ -76,7 +76,7 @@ export default function ShareableLinkPage() {
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
             <div className="flex items-center gap-2">
               <MemoryKeeperLogo size={28} className="text-brand-blue" strokeWidth={2} />
-              <h1 className="text-xl font-bold">Memory Keeper</h1>
+              <h1 className="text-xl font-bold">Legacy Words</h1>
             </div>
           </div>
         </header>
@@ -109,7 +109,7 @@ export default function ShareableLinkPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex items-center gap-2">
             <MemoryKeeperLogo size={28} className="text-brand-blue" strokeWidth={2} />
-            <h1 className="text-xl font-bold">Memory Keeper</h1>
+            <h1 className="text-xl font-bold">Legacy Words</h1>
           </div>
         </div>
       </header>
@@ -118,7 +118,7 @@ export default function ShareableLinkPage() {
         <div className="mb-8 text-center">
           <h1 className="text-3xl font-bold mb-2">Their Story</h1>
           <p className="text-gray-600">
-            A shared story from Memory Keeper
+            A shared story from Legacy Words
           </p>
         </div>
 
@@ -179,7 +179,7 @@ export default function ShareableLinkPage() {
 
         {/* Footer */}
         <div className="mt-12 text-center text-sm text-gray-500">
-          <p>Generated via Memory Keeper</p>
+          <p>Generated via Legacy Words</p>
           <p className="mt-1">
             <a href="https://memorykeeper.app" className="text-brand-blue hover:underline">
               memorykeeper.app

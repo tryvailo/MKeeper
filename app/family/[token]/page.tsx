@@ -73,7 +73,7 @@ export default function FamilyDashboardPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex items-center gap-2 text-2xl font-bold text-gray-900">
             <MemoryKeeperLogo size={28} className="text-brand-blue" strokeWidth={2} />
-            Memory Keeper
+            Legacy Words
           </div>
         </div>
       </header>
