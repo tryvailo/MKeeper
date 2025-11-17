@@ -2,8 +2,6 @@
 
 import { useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-
-export const dynamic = 'force-dynamic';
 import Link from "next/link";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -14,6 +12,8 @@ import {
   FileText
 } from "lucide-react";
 import { MemoryKeeperLogo } from "@/components/icons";
+
+export const dynamic = 'force-dynamic';
 
 function OnboardingCompleteContent() {
   const router = useRouter();
