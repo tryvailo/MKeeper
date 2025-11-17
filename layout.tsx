@@ -1,7 +1,5 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
-// TEMPORARILY DISABLED: Clerk disabled for testing
-// import { ClerkProvider } from "@clerk/nextjs";
 import { MemoryKeeperLogo } from "@/components/icons";
 import "./globals.css";
 
@@ -18,12 +16,9 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    // TEMPORARILY DISABLED: ClerkProvider disabled for testing
-    // <ClerkProvider>
-      <html lang="en-GB">
-        <body className={inter.className}>{children}</body>
-      </html>
-    // </ClerkProvider>
+    <html lang="en-GB">
+      <body className={inter.className}>{children}</body>
+    </html>
   );
 }
 
