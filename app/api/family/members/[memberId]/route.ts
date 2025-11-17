@@ -43,7 +43,6 @@ export async function PUT(
 ) {
   try {
     const userId = "temp-user"; // Temporary mock user ID
-    }
 
     const { memberId } = await params;
     const { accessLevel, relationship } = await request.json();

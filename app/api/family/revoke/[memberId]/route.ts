@@ -64,7 +64,6 @@ export async function DELETE(
 ) {
   try {
     const userId = "temp-user"; // Temporary mock user ID
-    }
 
     const { memberId } = await params;
 

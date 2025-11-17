@@ -43,7 +43,6 @@ async function writeSharedAccess(data: any[]) {
 export async function POST(request: NextRequest) {
   try {
     const userId = "temp-user"; // Temporary mock user ID
-    }
 
     const { preferenceId, email } = await request.json();
 

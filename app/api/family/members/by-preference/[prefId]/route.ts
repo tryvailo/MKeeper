@@ -33,7 +33,6 @@ export async function GET(
 ) {
   try {
     const userId = "temp-user"; // Temporary mock user ID
-    }
 
     const { prefId } = await params;
 
