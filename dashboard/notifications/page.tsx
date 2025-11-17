@@ -1,8 +1,6 @@
 "use client";
 
 import { useState, useEffect } from "react";
-// TEMPORARILY DISABLED: Clerk disabled for testing
-// import { useUser } from "@clerk/nextjs";
 import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -22,7 +20,6 @@ import { Notification } from "@/lib/supabase";
 import { MemoryKeeperLogo } from "@/components/icons";
 
 export default function NotificationsPage() {
-  // TEMPORARILY DISABLED: Clerk disabled for testing
   // const { user } = useUser();
   const user = { id: "temp-user", firstName: "Guest", fullName: "Guest User" };
   const [notifications, setNotifications] = useState<Notification[]>([]);

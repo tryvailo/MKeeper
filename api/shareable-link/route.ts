@@ -1,7 +1,6 @@
 import { promises as fs } from "fs";
 import path from "path";
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@clerk/nextjs/server";
 import { createShareableLink, isLinkValid, extendShareableLink, generateShareableURL, getExpirationMessage } from "@/lib/shareable-links";
 
 export const dynamic = 'force-dynamic';
@@ -43,10 +42,7 @@ async function writeShareableLinks(data: any[]) {
 // GET /api/shareable-link - Get all shareable links for user
 export async function GET(request: NextRequest) {
   try {
-    const { userId } = await auth();
-    if (!userId) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+    const userId = "temp-user"; // Temporary mock user ID
 
     const links = await readShareableLinks();
     const userLinks = links
@@ -68,10 +64,7 @@ export async function GET(request: NextRequest) {
 // POST /api/shareable-link - Create a new shareable link
 export async function POST(request: NextRequest) {
   try {
-    const { userId } = await auth();
-    if (!userId) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+    const userId = "temp-user"; // Temporary mock user ID
 
     const links = await readShareableLinks();
     const newLink = createShareableLink(userId);
@@ -96,10 +89,7 @@ export async function POST(request: NextRequest) {
 // PATCH /api/shareable-link - Extend or deactivate a shareable link
 export async function PATCH(request: NextRequest) {
   try {
-    const { userId } = await auth();
-    if (!userId) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+    const userId = "temp-user"; // Temporary mock user ID
 
     const { linkId, action } = await request.json();
 

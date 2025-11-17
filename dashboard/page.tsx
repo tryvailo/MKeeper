@@ -1,8 +1,6 @@
 "use client";
 
 import { useState, useEffect } from "react";
-// TEMPORARILY DISABLED: Clerk disabled for testing
-// import { useUser } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Preferences, ActivityLog } from "@/lib/supabase";
@@ -32,7 +30,6 @@ import {
 import { MemoryKeeperLogo } from "@/components/icons";
 
 export default function DashboardPage() {
-  // TEMPORARILY DISABLED: Clerk disabled for testing
   // const { user, isLoaded } = useUser();
   const user = { id: "temp-user", firstName: "Guest", fullName: "Guest User" }; // Temporary mock user
   const isLoaded = true; // Temporary: always loaded

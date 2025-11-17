@@ -1,8 +1,6 @@
 "use client";
 
 import { useState, useEffect } from "react";
-// TEMPORARILY DISABLED: Clerk disabled for testing
-// import { useUser } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { MemoryPreferences, calculateInterviewStats } from "@/lib/memory-data";
@@ -15,7 +13,6 @@ import { ArrowLeft, Share2, FileText, Heart, BookOpen, Sparkles, MessageSquare }
 import { MemoryKeeperLogo } from "@/components/icons";
 
 export default function PreferencesPage() {
-  // TEMPORARILY DISABLED: Clerk disabled for testing
   // const { user, isLoaded } = useUser();
   const user = { id: "temp-user", firstName: "Guest", fullName: "Guest User" };
   const isLoaded = true;

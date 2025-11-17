@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@clerk/nextjs/server";
 import { generateEmailStory, generateEmailStoryHTML, generateFamilyEmail } from "@/lib/email-sharing";
 import { sendEmail } from "@/lib/email";
 
@@ -8,10 +7,7 @@ export const dynamic = 'force-dynamic';
 // POST /api/email-share - Generate and optionally send email version of story
 export async function POST(request: NextRequest) {
   try {
-    const { userId } = await auth();
-    if (!userId) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+    const userId = "temp-user"; // Temporary mock user ID
 
     const { interviewData, recipientEmails, senderName, sendEmails = false } = await request.json();
 
