@@ -56,7 +56,7 @@ export async function sendWelcomeEmail(email: string, name: string) {
         </div>
         
         <div style="text-align: center; margin: 32px 0;">
-          <a href="${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/onboarding" style="display: inline-block; background-color: #1E40AF; color: #ffffff; text-decoration: none; padding: 12px 32px; border-radius: 6px; font-weight: 600; font-size: 16px;">
+          <a href="${process.env.NEXT_PUBLIC_APP_URL || "https://legacywords.co.uk"}/onboarding" style="display: inline-block; background-color: #1E40AF; color: #ffffff; text-decoration: none; padding: 12px 32px; border-radius: 6px; font-weight: 600; font-size: 16px;">
             Start Capturing Their Story
           </a>
         </div>
@@ -180,7 +180,7 @@ export async function sendAnnualReminderEmail(email: string, name: string) {
         </p>
         
         <div style="text-align: center; margin: 32px 0;">
-          <a href="${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/dashboard" style="display: inline-block; background-color: #1E40AF; color: #ffffff; text-decoration: none; padding: 12px 32px; border-radius: 6px; font-weight: 600; font-size: 16px;">
+          <a href="${process.env.NEXT_PUBLIC_APP_URL || "https://legacywords.co.uk"}/dashboard" style="display: inline-block; background-color: #1E40AF; color: #ffffff; text-decoration: none; padding: 12px 32px; border-radius: 6px; font-weight: 600; font-size: 16px;">
             Add More Memories
           </a>
         </div>

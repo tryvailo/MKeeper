@@ -78,7 +78,7 @@ export function extendShareableLink(link: ShareableLink): ShareableLink {
  * Generate shareable URL
  */
 export function generateShareableURL(token: string, baseUrl?: string): string {
-  const base = baseUrl || process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+  const base = baseUrl || process.env.NEXT_PUBLIC_APP_URL || "https://legacywords.co.uk";
   return `${base}/share/${token}`;
 }
 
