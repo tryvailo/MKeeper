@@ -1,10 +1,9 @@
-import { auth } from "@clerk/nextjs/server";
 import { supabase } from "@/lib/supabase";
 import { UserPreferences, ActivityLog } from "@/lib/supabase";
 
 export async function getCurrentUserId(): Promise<string | null> {
-  const { userId } = await auth();
-  return userId;
+  // TEMPORARILY DISABLED: No auth required
+  return "temp-user"; // Temporary mock user ID
 }
 
 export async function getUserPreferences(userId: string): Promise<UserPreferences | null> {
