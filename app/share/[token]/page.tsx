@@ -181,8 +181,8 @@ export default function ShareableLinkPage() {
         <div className="mt-12 text-center text-sm text-gray-500">
           <p>Generated via Legacy Words</p>
           <p className="mt-1">
-            <a href="https://memorykeeper.app" className="text-brand-blue hover:underline">
-              memorykeeper.app
+            <a href="https://legacywords.co.uk" className="text-brand-blue hover:underline">
+              legacywords.co.uk
             </a>
           </p>
         </div>

@@ -152,7 +152,7 @@ export default function HelpPage() {
       items: [
         {
           q: "I still have questions. Who do I talk to?",
-          a: "Email support@memorykeeper.app. We typically reply within 24-48 hours. We're here to help dementia families preserve what matters most.",
+          a: "Email support@legacywords.co.uk. We typically reply within 24-48 hours. We're here to help dementia families preserve what matters most.",
         },
         {
           q: "Do I need to be worried or sad using Legacy Words?",
@@ -240,8 +240,8 @@ export default function HelpPage() {
               <div>
                 <Mail className="h-5 w-5 text-gray-400 mb-2" strokeWidth={2} />
                 <p className="font-medium">Email</p>
-              <a href="mailto:support@memorykeeper.app" className="text-brand-blue hover:underline">
-                support@memorykeeper.app
+              <a href="mailto:support@legacywords.co.uk" className="text-brand-blue hover:underline">
+                support@legacywords.co.uk
               </a>
               </div>
               <div>
