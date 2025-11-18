@@ -197,7 +197,7 @@ export async function saveUserPreferences(preferences: Partial<Preferences>): Pr
       .single());
       
     // If insert fails with conflict (409), try update instead
-    if (error && (error.code === '23505' || error.status === 409 || error.message?.includes('duplicate') || error.message?.includes('conflict'))) {
+    if (error && (error.code === '23505' || error.message?.includes('duplicate') || error.message?.includes('conflict'))) {
       console.log("Insert conflict detected, trying update instead...");
       ({ data, error } = await supabase
         .from("preferences")
@@ -212,14 +212,13 @@ export async function saveUserPreferences(preferences: Partial<Preferences>): Pr
     console.error("Error saving preferences:", error);
     console.error("Error code:", error.code);
     console.error("Error message:", error.message);
-    console.error("Error status:", error.status);
     console.error("Error details:", JSON.stringify(error, null, 2));
     console.error("Attempted to save:", JSON.stringify(dataToSave, null, 2));
     console.error("User ID:", userId);
     console.error("Existing record:", existing ? "Yes (ID: " + existing.id + ")" : "No");
     
     // If it's a conflict error, try one more time with update
-    if ((error.code === '23505' || error.status === 409 || error.message?.includes('duplicate') || error.message?.includes('conflict')) && !existing?.id) {
+    if ((error.code === '23505' || error.message?.includes('duplicate') || error.message?.includes('conflict')) && !existing?.id) {
       console.log("Retrying with update after conflict...");
       const retryResult = await supabase
         .from("preferences")
