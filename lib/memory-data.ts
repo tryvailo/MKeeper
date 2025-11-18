@@ -77,9 +77,14 @@ export function getInterviewDataFromPreferences(prefs: any): MemoryInterviewData
   const questions = getAllQuestions();
   const interviewData: MemoryInterviewData = {};
   
+  // First check interview_data JSONB field (new format)
+  const interviewDataFromJson = prefs?.interview_data || {};
+  
   questions.forEach((question) => {
-    if (prefs[question.fieldName]) {
-      interviewData[question.fieldName as keyof MemoryInterviewData] = prefs[question.fieldName];
+    // Check both interview_data JSONB and direct fields (for backward compatibility)
+    const value = interviewDataFromJson[question.fieldName] || prefs[question.fieldName];
+    if (value && typeof value === 'string') {
+      interviewData[question.fieldName as keyof MemoryInterviewData] = value;
     }
   });
   

@@ -1,149 +1,134 @@
-import { promises as fs } from "fs";
-import path from "path";
 import { NextRequest, NextResponse } from "next/server";
-import crypto from "crypto";
+import {
+  createFamilyMember,
+  getUserPreferences,
+  getCurrentUserId,
+  getCurrentUser,
+} from "@/lib/api";
 import { sendShareInviteEmail } from "@/lib/email";
+import { supabase } from "@/lib/supabase";
+import { familyMemberSchema, validateData } from "@/lib/validation";
+import { getUserFriendlyError, isConnectionError } from "@/lib/supabase-error-handler";
 
 export const dynamic = 'force-dynamic';
-
-const DATA_DIR = path.join(process.cwd(), "data");
-const FAMILY_MEMBERS_FILE = path.join(DATA_DIR, "family_members.json");
-const SHARED_ACCESS_FILE = path.join(DATA_DIR, "shared_access.json");
-
-async function ensureDataDir() {
-  try {
-    await fs.mkdir(DATA_DIR, { recursive: true });
-  } catch (error) {
-    // Directory might already exist
-  }
-}
-
-async function readFamilyMembers() {
-  await ensureDataDir();
-  try {
-    const data = await fs.readFile(FAMILY_MEMBERS_FILE, "utf-8");
-    return JSON.parse(data);
-  } catch (error) {
-    return [];
-  }
-}
-
-async function writeFamilyMembers(data: any[]) {
-  try {
-    await ensureDataDir();
-    await fs.writeFile(FAMILY_MEMBERS_FILE, JSON.stringify(data, null, 2), "utf-8");
-  } catch (error) {
-    // Ignore file write errors (filesystem not available on Vercel)
-    console.warn("File write failed (expected on Vercel):", error);
-  }
-}
-
-async function readSharedAccess() {
-  await ensureDataDir();
-  try {
-    const data = await fs.readFile(SHARED_ACCESS_FILE, "utf-8");
-    return JSON.parse(data);
-  } catch (error) {
-    return [];
-  }
-}
-
-async function writeSharedAccess(data: any[]) {
-  try {
-    await ensureDataDir();
-    await fs.writeFile(SHARED_ACCESS_FILE, JSON.stringify(data, null, 2), "utf-8");
-  } catch (error) {
-    // Ignore file write errors (filesystem not available on Vercel)
-    console.warn("File write failed (expected on Vercel):", error);
-  }
-}
 
 // POST /api/family/invite - Send invite email
 export async function POST(request: NextRequest) {
   try {
-    const userId = "temp-user"; // Temporary mock user ID
-
-    const { preferenceId, email, name, relationship, accessLevel } = await request.json();
-
-    if (!preferenceId || !email) {
-      return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
+    const userId = await getCurrentUserId();
+    if (!userId) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // Generate unique access token
-    const accessToken = crypto.randomBytes(32).toString("hex");
+    let body;
+    try {
+      body = await request.json();
+    } catch (error) {
+      return NextResponse.json(
+        { error: "Invalid JSON in request body" },
+        { status: 400 }
+      );
+    }
 
-    // Create family member record
-    const familyMembers = await readFamilyMembers();
-    const newMember = {
-      id: `member_${Date.now()}`,
-      preferences_id: preferenceId,
+    const { preferenceId, email, name, relationship: relationshipInput, accessLevel } = body;
+
+    if (!preferenceId || !email) {
+      return NextResponse.json({ error: "Missing required fields: preferenceId and email are required" }, { status: 400 });
+    }
+
+    // Validate family member data
+    const memberData = {
       name: name || email.split("@")[0],
-      email: email,
-      relationship: relationship || "other",
-      access_level: accessLevel || "view",
-      sharing_link_token: accessToken,
-      invited_at: new Date().toISOString(),
-      accepted_at: null,
-      created_at: new Date().toISOString(),
+      email,
+      relationship: (relationshipInput || "other") as any,
+      access_level: (accessLevel || "view") as any,
     };
-    familyMembers.push(newMember);
-    await writeFamilyMembers(familyMembers);
 
-    // Create shared access record
-    const sharedAccess = await readSharedAccess();
-    sharedAccess.push({
-      id: `share_${Date.now()}`,
-      preference_id: preferenceId,
-      shared_with_email: email,
-      access_token: accessToken,
-      created_at: new Date().toISOString(),
+    const validation = validateData(familyMemberSchema, memberData);
+    if (!validation.success) {
+      return NextResponse.json(
+        { error: "Validation failed", errors: validation.errors },
+        { status: 400 }
+      );
+    }
+
+    // Verify user owns the preferences
+    const preferences = await getUserPreferences(userId);
+    if (!preferences || preferences.id !== preferenceId) {
+      return NextResponse.json({ error: "Preferences not found" }, { status: 404 });
+    }
+
+    // Create family member
+    const newMember = await createFamilyMember(preferenceId, {
+      name: validation.data.name,
+      email: validation.data.email,
+      relationship: validation.data.relationship,
+      access_level: validation.data.access_level,
     });
-    await writeSharedAccess(sharedAccess);
+
+    if (!newMember) {
+      return NextResponse.json({ error: "Failed to create family member" }, { status: 500 });
+    }
+
+    // Create shared access record (legacy support)
+    try {
+      await supabase.from("shared_access").insert({
+        preference_id: preferenceId,
+        shared_with_email: email,
+        access_token: newMember.sharing_link_token,
+      });
+    } catch (error) {
+      console.warn("Failed to create shared_access record:", error);
+      // Continue - this is for legacy support
+    }
 
     // Generate access link
-    const shareUrl = `${process.env.NEXT_PUBLIC_APP_URL || "https://legacywords.co.uk"}/family/${accessToken}`;
+    const shareUrl = `${process.env.NEXT_PUBLIC_APP_URL || "https://legacywords.co.uk"}/family/${newMember.sharing_link_token}`;
 
-    // Get inviter name from Clerk
+    // Get inviter name from Supabase Auth
     let inviterName = "Someone";
     try {
-      const user = { id: "temp-user", firstName: "Guest", fullName: "Guest User", emailAddresses: [{ emailAddress: "guest@example.com" }] }; // Temporary mock user
+      const user = await getCurrentUser();
       if (user) {
-        inviterName = user.firstName || user.fullName || user.emailAddresses[0]?.emailAddress?.split("@")[0] || "Someone";
+        inviterName = user.user_metadata?.full_name || user.email?.split("@")[0] || "Someone";
       }
     } catch (error) {
       console.error("Error getting user info:", error);
     }
 
     // Send email invitation
+    let emailSent = false;
     try {
       const emailResult = await sendShareInviteEmail(
         email,
         inviterName,
         shareUrl,
-        name || email.split("@")[0],
-        relationship || "other",
-        accessLevel || "view"
+        newMember.name,
+        newMember.relationship,
+        newMember.access_level
       );
 
-      if (!emailResult.success) {
+      emailSent = emailResult.success || false;
+      if (!emailSent) {
         console.error("Failed to send email:", emailResult);
-        // Continue anyway - the link is still created
       }
     } catch (emailError) {
       console.error("Error sending email:", emailError);
-      // Continue anyway - the link is still created
     }
 
     return NextResponse.json({
       success: true,
       shareUrl,
-      accessToken,
+      accessToken: newMember.sharing_link_token,
       member: newMember,
-      emailSent: true,
+      emailSent,
     });
   } catch (error) {
     console.error("Error in family invite API:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    const statusCode = isConnectionError(error) ? 503 : 500;
+    return NextResponse.json(
+      { error: getUserFriendlyError(error) },
+      { status: statusCode }
+    );
   }
 }
-

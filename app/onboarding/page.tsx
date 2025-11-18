@@ -18,14 +18,13 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { useAuth } from "@/lib/hooks/useAuth";
 import { ArrowLeft, Clock, CheckCircle2, AlertCircle } from "lucide-react";
 
 const TOTAL_STEPS = 6; // 5 categories + Review
 
 export default function OnboardingPage() {
-  // const { user, isLoaded } = useUser();
-  const user = { id: "temp-user", firstName: "Guest", fullName: "Guest User" };
-  const isLoaded = true;
+  const { user, loading: authLoading } = useAuth();
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [step, setStep] = useState<InterviewStep>(1);
@@ -38,11 +37,13 @@ export default function OnboardingPage() {
   const [elapsedTime, setElapsedTime] = useState(0);
 
   useEffect(() => {
-    // TEMPORARILY DISABLED: No auth check
-    // if (isLoaded && !user) {
-    //   router.push("/sign-in");
-    // }
-  }, []);
+    if (authLoading) return;
+    
+    if (!user) {
+      router.push("/sign-in");
+      return;
+    }
+  }, [user, authLoading, router]);
 
   // Timer effect
   useEffect(() => {
@@ -62,22 +63,43 @@ export default function OnboardingPage() {
     setStepStartTime(Date.now());
   }, [step]);
 
-  // Auto-save on step change
+  // Auto-save on step change (only if we have meaningful data)
   useEffect(() => {
-    if (step > 1 && step < 6 && Object.keys(formData).length > 0) {
-      autoSave();
+    if (step > 1 && step < 6) {
+      // Only auto-save if we have at least one answer with 10+ characters
+      const hasData = Object.values(formData).some((value) => 
+        value && typeof value === 'string' && value.trim().length >= 10
+      );
+      
+      if (hasData) {
+        autoSave();
+      }
     }
-  }, [step, formData]);
+  }, [step]); // Remove formData from dependencies to avoid too many calls
 
   const autoSave = async () => {
     try {
-      await fetch("/api/preferences", {
+      // Only save if we have meaningful data
+      const hasData = Object.values(formData).some((value) => 
+        value && typeof value === 'string' && value.trim().length >= 10
+      );
+      
+      if (!hasData) {
+        return; // Skip auto-save if no meaningful data
+      }
+      
+      const response = await fetch("/api/preferences", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(formData),
       });
+      
+      if (!response.ok) {
+        console.warn("Auto-save failed (non-critical):", response.status);
+      }
     } catch (error) {
-      console.error("Auto-save failed:", error);
+      // Auto-save errors are non-critical, just log them
+      console.warn("Auto-save failed (non-critical):", error);
     }
   };
 
@@ -114,22 +136,26 @@ export default function OnboardingPage() {
     if (step === 6) return true; // Review step doesn't need validation
 
     const category = getCategoryByStep(step);
-    if (!category) return false;
+    if (!category) return true; // Allow navigation even if category not found
 
     const stepErrors: Record<string, string> = {};
     let isValid = true;
 
+    // Only validate answers that were provided (all questions are optional)
     category.questions.forEach((question) => {
       const answer = formData[question.fieldName] || "";
-      const validation = validateAnswer(answer, question);
-      if (!validation.valid) {
-        stepErrors[question.fieldName] = validation.error || "";
-        isValid = false;
+      // Only validate if user provided an answer
+      if (answer.trim().length > 0) {
+        const validation = validateAnswer(answer, question);
+        if (!validation.valid) {
+          stepErrors[question.fieldName] = validation.error || "";
+          isValid = false;
+        }
       }
     });
 
     setErrors(stepErrors);
-    return isValid;
+    return isValid; // Always allow navigation (questions are optional)
   };
 
   const updateFormData = (field: string, value: string) => {
@@ -167,20 +193,32 @@ export default function OnboardingPage() {
     setLoading(true);
 
     try {
+      console.log("Submitting form data:", Object.keys(formData).length, "fields");
+      console.log("Sample data:", Object.keys(formData).slice(0, 3).map(k => ({ key: k, length: formData[k]?.length || 0 })));
+      
       const response = await fetch("/api/preferences", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(formData),
       });
 
+      console.log("Response status:", response.status);
+      console.log("Response ok:", response.ok);
+
       if (response.ok) {
+        const result = await response.json();
+        console.log("Successfully saved:", result);
         router.push("/onboarding/complete?from=onboarding");
       } else {
-        throw new Error("Failed to save preferences");
+        const errorData = await response.json().catch(() => ({}));
+        console.error("Error response:", errorData);
+        console.error("Response status:", response.status);
+        throw new Error(errorData.error || `Failed to save preferences (${response.status})`);
       }
     } catch (error) {
       console.error("Error saving preferences:", error);
-      alert("Something went wrong. Please try again, or contact support if it keeps happening.");
+      const errorMessage = error instanceof Error ? error.message : "Something went wrong. Please try again, or contact support if it keeps happening.";
+      alert(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -202,10 +240,9 @@ export default function OnboardingPage() {
           className={`w-full mt-2 px-4 py-3 border rounded-lg focus:ring-2 focus:ring-brand-blue focus:border-transparent ${
             hasError ? "border-red-300 bg-red-50" : "border-gray-300"
           }`}
-          placeholder={question.placeholder}
+          placeholder={`${question.placeholder} (Optional - you can fill this later)`}
           value={answer}
           onChange={(e) => updateFormData(question.fieldName, e.target.value)}
-          required={question.required}
         />
         {hasError && (
           <p className="mt-1 text-sm text-red-600 flex items-center gap-1">
@@ -253,9 +290,8 @@ export default function OnboardingPage() {
             type="button"
             onClick={nextStep}
             className="flex-1"
-            disabled={answered < total}
           >
-            {answered < total ? `Answer ${total - answered} more question${total - answered > 1 ? "s" : ""}` : "Next"}
+            {answered > 0 ? `Next (${answered}/${total} answered)` : "Skip for now"}
           </Button>
         </div>
       </div>
@@ -359,8 +395,12 @@ export default function OnboardingPage() {
     );
   };
 
-  if (!isLoaded || !user) {
+  if (authLoading) {
     return <div className="min-h-screen flex items-center justify-center">Getting everything ready...</div>;
+  }
+
+  if (!user) {
+    return null; // Will redirect via useEffect
   }
 
   const { current, total, percentage } = getStepProgress();
@@ -382,7 +422,7 @@ export default function OnboardingPage() {
             Let&apos;s capture their story
           </h1>
           <p className="text-gray-600 mb-8">
-            Take your time. There&apos;s no rush. You can save after each step and come back anytime.
+            Take your time. There&apos;s no rush. All questions are optional - you can answer what you want now and fill in the rest later from your dashboard.
           </p>
 
           {/* Progress indicator */}

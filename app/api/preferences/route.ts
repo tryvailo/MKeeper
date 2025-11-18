@@ -1,120 +1,64 @@
-import { promises as fs } from "fs";
-import path from "path";
 import { NextRequest, NextResponse } from "next/server";
-import { UserPreferences } from "@/lib/supabase";
+import { getUserPreferences, saveUserPreferences, getCurrentUserId } from "@/lib/api";
+import { Preferences } from "@/lib/supabase";
+import { getUserFriendlyError, isConnectionError } from "@/lib/supabase-error-handler";
 
 export const dynamic = 'force-dynamic';
 
-const DATA_DIR = path.join(process.cwd(), "data");
-const PREFERENCES_FILE = path.join(DATA_DIR, "preferences.json");
-const ACTIVITY_FILE = path.join(DATA_DIR, "activity.json");
-
-// Ensure data directory exists
-async function ensureDataDir() {
-  try {
-    await fs.mkdir(DATA_DIR, { recursive: true });
-  } catch (error) {
-    // Directory might already exist
-  }
-}
-
-// Read preferences from file
-async function readPreferences() {
-  await ensureDataDir();
-  try {
-    const data = await fs.readFile(PREFERENCES_FILE, "utf-8");
-    return JSON.parse(data);
-  } catch (error) {
-    return {};
-  }
-}
-
-// Write preferences to file
-async function writePreferences(data: any) {
-  try {
-    await ensureDataDir();
-    await fs.writeFile(PREFERENCES_FILE, JSON.stringify(data, null, 2), "utf-8");
-  } catch (error) {
-    // Ignore file write errors (filesystem not available on Vercel)
-    console.warn("File write failed (expected on Vercel):", error);
-  }
-}
-
-// Read activity logs from file
-async function readActivity() {
-  await ensureDataDir();
-  try {
-    const data = await fs.readFile(ACTIVITY_FILE, "utf-8");
-    return JSON.parse(data);
-  } catch (error) {
-    return [];
-  }
-}
-
-// Write activity logs to file
-async function writeActivity(data: any[]) {
-  try {
-    await ensureDataDir();
-    await fs.writeFile(ACTIVITY_FILE, JSON.stringify(data, null, 2), "utf-8");
-  } catch (error) {
-    // Ignore file write errors (filesystem not available on Vercel)
-    console.warn("File write failed (expected on Vercel):", error);
-  }
-}
-
 export async function GET(request: NextRequest) {
   try {
-    // TEMPORARILY DISABLED: No auth required for testing
-    // const userId = "temp-user"; // Temporary mock user ID
-    // }
-    const userId = "temp-user"; // Temporary mock user ID
+    const userId = await getCurrentUserId();
+    if (!userId) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
 
-    const preferences = await readPreferences();
-    const userPreferences = preferences[userId] || null;
+    const preferences = await getUserPreferences(userId);
 
-    return NextResponse.json({ preferences: userPreferences });
+    return NextResponse.json({ preferences });
   } catch (error) {
     console.error("Error fetching preferences:", error);
-    return NextResponse.json({ error: "Failed to fetch preferences" }, { status: 500 });
+    const statusCode = isConnectionError(error) ? 503 : 500;
+    return NextResponse.json(
+      { error: getUserFriendlyError(error) },
+      { status: statusCode }
+    );
   }
 }
 
 export async function POST(request: NextRequest) {
   try {
-    // TEMPORARILY DISABLED: No auth required for testing
-    // const userId = "temp-user"; // Temporary mock user ID
-    // }
-    const userId = "temp-user"; // Temporary mock user ID
+    const userId = await getCurrentUserId();
+    if (!userId) {
+      console.error("POST /api/preferences: Unauthorized - no user ID");
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
 
-    const preferences: Partial<UserPreferences> = await request.json();
-    const preferencesData = await readPreferences();
+    const preferencesData: Partial<Preferences> = await request.json();
+    console.log("POST /api/preferences: Received data for user:", userId);
+    console.log("POST /api/preferences: Data keys count:", Object.keys(preferencesData).length);
+    console.log("POST /api/preferences: Sample keys:", Object.keys(preferencesData).slice(0, 5));
     
-    const existing = preferencesData[userId];
-    const preferencesWithUserId = {
-      ...preferences,
-      user_id: userId,
-      id: existing?.id || `pref_${Date.now()}`,
-      created_at: existing?.created_at || new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-    };
+    const savedPreferences = await saveUserPreferences(preferencesData);
 
-    preferencesData[userId] = preferencesWithUserId;
-    await writePreferences(preferencesData);
+    if (!savedPreferences) {
+      console.error("POST /api/preferences: saveUserPreferences returned null");
+      console.error("POST /api/preferences: This means an error occurred in saveUserPreferences");
+      console.error("POST /api/preferences: Check server logs above for error details");
+      return NextResponse.json({ 
+        error: "Failed to save preferences. Check server console for details.",
+        hint: "The save operation failed. Please check the terminal where 'npm run dev' is running for error details."
+      }, { status: 500 });
+    }
 
-    // Log activity
-    const activityLogs = await readActivity();
-    activityLogs.push({
-      id: `log_${Date.now()}`,
-      user_id: userId,
-      action: existing ? "updated_preferences" : "created_preferences",
-      details: null,
-      created_at: new Date().toISOString(),
-    });
-    await writeActivity(activityLogs);
-
-    return NextResponse.json({ preferences: preferencesWithUserId });
+    console.log("POST /api/preferences: Successfully saved preferences");
+    return NextResponse.json({ preferences: savedPreferences });
   } catch (error) {
-    console.error("Error saving preferences:", error);
-    return NextResponse.json({ error: "Failed to save preferences" }, { status: 500 });
+    console.error("POST /api/preferences: Exception:", error);
+    console.error("POST /api/preferences: Error stack:", error instanceof Error ? error.stack : "No stack");
+    const statusCode = isConnectionError(error) ? 503 : 500;
+    return NextResponse.json(
+      { error: getUserFriendlyError(error) },
+      { status: statusCode }
+    );
   }
 }

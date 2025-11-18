@@ -3,7 +3,20 @@ import { createClient } from "@supabase/supabase-js";
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "";
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+// Validate environment variables (critical for Vercel deployment)
+if (!supabaseUrl && typeof window === "undefined") {
+  console.warn("⚠️ NEXT_PUBLIC_SUPABASE_URL is not set. Supabase client may not work correctly.");
+}
+
+if (!supabaseAnonKey && typeof window === "undefined") {
+  console.warn("⚠️ NEXT_PUBLIC_SUPABASE_ANON_KEY is not set. Supabase client may not work correctly.");
+}
+
+export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+  auth: {
+    persistSession: false, // Important for server-side rendering on Vercel
+  },
+});
 
 // Database types
 
@@ -50,6 +63,7 @@ export interface Preferences {
   dress_code?: string;
   other_wishes?: string;
   things_not_wanted?: string;
+  interview_data?: Record<string, string>; // JSONB field for interview/memory responses
   version?: number;
   created_at?: string;
   updated_at?: string;
@@ -125,5 +139,17 @@ export interface ActivityLog {
   action: string;
   details?: string;
   created_at?: string;
+}
+
+export interface ShareableLink {
+  id?: string;
+  user_id: string;
+  preferences_id?: string;
+  link_token: string;
+  created_at?: string;
+  expires_at: string;
+  is_active?: boolean;
+  access_count?: number;
+  last_accessed_at?: string;
 }
 

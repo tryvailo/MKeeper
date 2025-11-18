@@ -1,67 +1,66 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useState, useEffect } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
-export default function SignUpPage() {
+export default function ResetPasswordPage() {
   const router = useRouter();
-  const [email, setEmail] = useState("");
+  const searchParams = useSearchParams();
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const [fullName, setFullName] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
   const supabase = createClient();
 
-  const handleSignUp = async (e: React.FormEvent) => {
+  useEffect(() => {
+    // Check if we have the necessary tokens in the URL
+    const token = searchParams.get("token");
+    const type = searchParams.get("type");
+    
+    if (!token || type !== "recovery") {
+      setError("Invalid or missing reset token. Please request a new password reset.");
+    }
+  }, [searchParams]);
+
+  const handleUpdatePassword = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
-    setLoading(true);
 
     // Validation
     if (password !== confirmPassword) {
       setError("Passwords do not match");
-      setLoading(false);
       return;
     }
 
     if (password.length < 8) {
       setError("Password must be at least 8 characters");
-      setLoading(false);
       return;
     }
 
+    setLoading(true);
+
     try {
-      const { data, error: signUpError } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          emailRedirectTo: `${window.location.origin}/onboarding`,
-          data: {
-            full_name: fullName || undefined,
-          },
-        },
+      const { error: updateError } = await supabase.auth.updateUser({
+        password: password,
       });
 
-      if (signUpError) {
-        setError(signUpError.message);
+      if (updateError) {
+        setError(updateError.message);
         setLoading(false);
         return;
       }
 
-      if (data.user) {
-        setSuccess(true);
-        // Redirect to onboarding after a short delay
-        setTimeout(() => {
-          router.push("/onboarding");
-        }, 2000);
-      }
+      setSuccess(true);
+      // Redirect to sign in after a short delay
+      setTimeout(() => {
+        router.push("/sign-in");
+      }, 2000);
     } catch (err) {
       setError("An unexpected error occurred. Please try again.");
       setLoading(false);
@@ -88,16 +87,13 @@ export default function SignUpPage() {
             </svg>
           </div>
           <h2 className="text-2xl font-bold text-gray-900 mb-2">
-            Check your email
+            Password updated
           </h2>
           <p className="text-gray-600 mb-4">
-            We've sent you a confirmation link at <strong>{email}</strong>
+            Your password has been successfully updated.
           </p>
           <p className="text-sm text-gray-500">
-            Please check your email and click the link to verify your account.
-          </p>
-          <p className="text-sm text-gray-500 mt-2">
-            Redirecting to onboarding...
+            Redirecting to sign in...
           </p>
         </div>
       </div>
@@ -109,13 +105,13 @@ export default function SignUpPage() {
       <div className="max-w-md w-full space-y-8">
         <div>
           <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
-            Create your account
+            Set new password
           </h2>
           <p className="mt-2 text-center text-sm text-gray-600">
-            Takes 2 minutes. No payment required.
+            Enter your new password below.
           </p>
         </div>
-        <form className="mt-8 space-y-6" onSubmit={handleSignUp}>
+        <form className="mt-8 space-y-6" onSubmit={handleUpdatePassword}>
           {error && (
             <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
               {error}
@@ -124,30 +120,7 @@ export default function SignUpPage() {
 
           <div className="space-y-4">
             <div>
-              <Label htmlFor="fullName">Full Name (optional)</Label>
-              <Input
-                id="fullName"
-                type="text"
-                value={fullName}
-                onChange={(e) => setFullName(e.target.value)}
-                placeholder="John Smith"
-              />
-            </div>
-
-            <div>
-              <Label htmlFor="email">Email address</Label>
-              <Input
-                id="email"
-                type="email"
-                required
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="your@email.com"
-              />
-            </div>
-
-            <div>
-              <Label htmlFor="password">Password</Label>
+              <Label htmlFor="password">New Password</Label>
               <Input
                 id="password"
                 type="password"
@@ -156,6 +129,7 @@ export default function SignUpPage() {
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••"
                 minLength={8}
+                autoComplete="new-password"
               />
               <p className="mt-1 text-xs text-gray-500">
                 Must be at least 8 characters
@@ -163,7 +137,7 @@ export default function SignUpPage() {
             </div>
 
             <div>
-              <Label htmlFor="confirmPassword">Confirm Password</Label>
+              <Label htmlFor="confirmPassword">Confirm New Password</Label>
               <Input
                 id="confirmPassword"
                 type="password"
@@ -172,6 +146,7 @@ export default function SignUpPage() {
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 placeholder="••••••••"
                 minLength={8}
+                autoComplete="new-password"
               />
             </div>
           </div>
@@ -182,17 +157,16 @@ export default function SignUpPage() {
               className="w-full"
               disabled={loading}
             >
-              {loading ? "Creating account..." : "Create Account"}
+              {loading ? "Updating password..." : "Update password"}
             </Button>
           </div>
 
           <div className="text-center text-sm">
-            <span className="text-gray-600">Already have an account? </span>
             <Link
               href="/sign-in"
               className="font-medium text-brand-blue hover:text-brand-blue-dark"
             >
-              Sign in
+              Back to sign in
             </Link>
           </div>
         </form>
@@ -200,3 +174,4 @@ export default function SignUpPage() {
     </div>
   );
 }
+

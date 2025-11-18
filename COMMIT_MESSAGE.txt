@@ -1,0 +1,16 @@
+feat: Migrate from Clerk to Supabase Auth
+
+- Replace Clerk authentication with Supabase Auth
+- Implement email/password sign up and sign in
+- Add password reset and forgot password flows
+- Create auth callback handler for email verification
+- Add UserButton component for user management
+- Update middleware to handle Supabase sessions
+- Create server and client Supabase clients
+- Add useAuth hook for client-side auth state
+- Make all interview questions optional
+- Add dashboard page for completing unanswered questions
+- Store interview data in JSONB field (interview_data)
+- Update API routes to use Supabase Auth
+- Improve error handling and logging
+

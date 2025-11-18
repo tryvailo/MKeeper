@@ -4,11 +4,12 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Preferences, ActivityLog } from "@/lib/supabase";
-import { MemoryPreferences, calculateInterviewStats } from "@/lib/memory-data";
+import { MemoryPreferences, calculateInterviewStats, getInterviewDataFromPreferences } from "@/lib/memory-data";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { useAuth } from "@/lib/hooks/useAuth";
 import { 
   FileText, 
   Users, 
@@ -28,11 +29,10 @@ import {
   Printer
 } from "lucide-react";
 import { MemoryKeeperLogo } from "@/components/icons";
+import { UserButton } from "@/components/auth/UserButton";
 
 export default function DashboardPage() {
-  // const { user, isLoaded } = useUser();
-  const user = { id: "temp-user", firstName: "Guest", fullName: "Guest User" }; // Temporary mock user
-  const isLoaded = true; // Temporary: always loaded
+  const { user, loading: authLoading } = useAuth();
   const router = useRouter();
   const [preferences, setPreferences] = useState<MemoryPreferences | null>(null);
   const [activityLogs, setActivityLogs] = useState<ActivityLog[]>([]);
@@ -42,19 +42,18 @@ export default function DashboardPage() {
   const [showWelcome, setShowWelcome] = useState(true);
 
   useEffect(() => {
-    // TEMPORARILY DISABLED: No auth check
-    // if (isLoaded && !user) {
-    //   router.push("/sign-in");
-    //   return;
-    // }
+    if (authLoading) return;
+    
+    if (!user) {
+      router.push("/sign-in");
+      return;
+    }
 
-    // Always load data (no auth required)
     loadData();
-  }, []);
+  }, [user, authLoading, router]);
 
   const loadData = async () => {
-    // TEMPORARILY DISABLED: No auth check
-    // if (!user?.id) return;
+    if (!user?.id) return;
 
     setLoading(true);
     try {
@@ -114,7 +113,7 @@ export default function DashboardPage() {
     }
   };
 
-  if (!isLoaded || loading) {
+  if (authLoading || loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
@@ -163,12 +162,7 @@ export default function DashboardPage() {
               <Link href="/help">
                 <Button variant="ghost" size="sm">Help</Button>
               </Link>
-              <Link href="/settings">
-                <Button variant="ghost" size="sm">
-                  <Settings className="h-4 w-4 mr-2" strokeWidth={2} />
-                  Settings
-                </Button>
-              </Link>
+              <UserButton />
             </div>
           </div>
         </div>
@@ -402,9 +396,10 @@ export default function DashboardPage() {
               </CardHeader>
               <CardContent>
                 {(() => {
-                  const stats = preferences ? calculateInterviewStats(preferences) : null;
+                  const interviewData = preferences ? getInterviewDataFromPreferences(preferences) : null;
+                  const stats = interviewData ? calculateInterviewStats(interviewData) : null;
                   const hasContent = stats && stats.answeredQuestions > 0;
-                  const meaningfulQuote = preferences?.how_remembered || preferences?.matters_most || preferences?.life_lessons || null;
+                  const meaningfulQuote = interviewData?.how_remembered || interviewData?.matters_most || interviewData?.life_lessons || null;
                   
                   return (
                     <div className="grid md:grid-cols-2 gap-4">
@@ -413,6 +408,13 @@ export default function DashboardPage() {
                         <p className="font-semibold">
                           {hasContent ? `${stats!.answeredQuestions} of ${stats!.totalQuestions}` : "Not started"}
                         </p>
+                        {hasContent && stats!.answeredQuestions < stats!.totalQuestions && (
+                          <Link href="/dashboard/memories">
+                            <Button variant="link" size="sm" className="p-0 h-auto text-xs mt-1">
+                              Complete remaining questions →
+                            </Button>
+                          </Link>
+                        )}
                       </div>
                       <div>
                         <p className="text-sm text-gray-600">Words written</p>
