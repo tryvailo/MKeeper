@@ -108,7 +108,8 @@ export async function saveUserPreferences(preferences: Partial<Preferences>): Pr
     if (interviewFields.includes(key) && value && typeof value === 'string' && value.trim().length > 0) {
       interviewData[key] = value.trim();
     } else if (key !== 'user_id' && key !== 'id' && value !== undefined && value !== null) {
-      regularPreferences[key as keyof Preferences] = value;
+      // Type-safe assignment using type assertion
+      (regularPreferences as any)[key] = value;
     }
   });
 

@@ -32,7 +32,7 @@ export default function NotificationsPage() {
       const mockNotifications: Notification[] = [
         {
           id: "1",
-          user_id: user?.id || "",
+          user_id: user?.id || "temp-user",
           type: "annual_reminder",
           message: "It's been a while since you added memories. Want to capture more of their story?",
           sent_at: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
@@ -77,7 +77,7 @@ export default function NotificationsPage() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [user?.id]);
 
   useEffect(() => {
     loadNotifications();
