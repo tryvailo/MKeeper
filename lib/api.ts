@@ -267,6 +267,7 @@ export async function logActivity(userId: string, action: string, details?: stri
 }
 
 export async function getActivityLogs(userId: string): Promise<ActivityLog[]> {
+  const supabase = await createClient();
   const { data, error } = await supabase
     .from("activity_logs")
     .select("*")
@@ -322,6 +323,7 @@ export async function getFamilyMembers(preferencesId: string, userId?: string): 
  * Used for accessing shared preferences via token
  */
 export async function getFamilyMemberByToken(token: string): Promise<FamilyMember | null> {
+  const supabase = await createClient();
   const { data, error } = await supabase
     .from("family_members")
     .select("*")
@@ -682,6 +684,7 @@ export async function extendShareableLink(linkId: string, days: number = 30): Pr
  * Also increments access_count and updates last_accessed_at
  */
 export async function validateShareableLink(token: string): Promise<ShareableLink | null> {
+  const supabase = await createClient();
   const { data, error } = await supabase
     .from("shareable_links")
     .select("*")
@@ -749,8 +752,9 @@ export async function uploadFile(
   }
 
   try {
-      // Get file name (File has name property, Blob might not)
-      const fileName = file instanceof globalThis.File ? file.name : `file_${Date.now()}`;
+    const supabase = await createClient();
+    // Get file name (File has name property, Blob might not)
+    const fileName = file instanceof globalThis.File ? file.name : `file_${Date.now()}`;
     
     // Generate unique file name to avoid conflicts
     const fileExtension = fileName.split(".").pop() || "";
@@ -841,6 +845,7 @@ export async function getFileDownloadUrl(fileId: string, expiresIn: number = 360
     return null;
   }
 
+  const supabase = await createClient();
   // Get file record
   const { data: file, error: fetchError } = await supabase
     .from("files")
@@ -884,6 +889,7 @@ export async function deleteFile(fileId: string): Promise<boolean> {
     return false;
   }
 
+  const supabase = await createClient();
   // Get file record
   const { data: file, error: fetchError } = await supabase
     .from("files")
@@ -930,6 +936,7 @@ export async function deleteFile(fileId: string): Promise<boolean> {
  * Optionally filter by family_member_id
  */
 export async function getComments(preferencesId: string, familyMemberId?: string): Promise<Comment[]> {
+  const supabase = await createClient();
   let query = supabase
     .from("comments")
     .select("*")
@@ -1106,6 +1113,7 @@ export async function deleteComment(commentId: string): Promise<boolean> {
     return false;
   }
 
+  const supabase = await createClient();
   // Get comment with related data
   const { data: comment, error: fetchError } = await supabase
     .from("comments")
@@ -1310,6 +1318,7 @@ export async function deleteNotification(notificationId: string): Promise<boolea
     return false;
   }
 
+  const supabase = await createClient();
   // Verify notification belongs to user
   const { data: notification, error: fetchError } = await supabase
     .from("notifications")
