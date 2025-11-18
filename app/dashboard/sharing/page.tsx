@@ -58,12 +58,37 @@ export default function SharingPage() {
     loadPreferenceId();
   }, []);
 
+  const loadShareableLinks = useCallback(async () => {
+    try {
+      const response = await fetch("/api/shareable-link");
+      if (response.ok) {
+        const data = await response.json();
+        setShareableLinks(data.links || []);
+      }
+    } catch (error) {
+      console.error("Error loading shareable links:", error);
+    }
+  }, []);
+
+  const loadFamilyMembers = useCallback(async () => {
+    if (!preferenceId) return;
+    try {
+      const response = await fetch(`/api/family/members/${preferenceId}`);
+      if (response.ok) {
+        const data = await response.json();
+        setFamilyMembers(data.members || []);
+      }
+    } catch (error) {
+      console.error("Error loading family members:", error);
+    }
+  }, [preferenceId]);
+
   useEffect(() => {
     if (preferenceId) {
       loadShareableLinks();
       loadFamilyMembers();
     }
-  }, [preferenceId]);
+  }, [preferenceId, loadShareableLinks, loadFamilyMembers]);
 
   const loadPreferenceId = async () => {
     try {
@@ -79,30 +104,7 @@ export default function SharingPage() {
     }
   };
 
-  const loadShareableLinks = async () => {
-    try {
-      const response = await fetch("/api/shareable-link");
-      if (response.ok) {
-        const data = await response.json();
-        setShareableLinks(data.links || []);
-      }
-    } catch (error) {
-      console.error("Error loading shareable links:", error);
-    }
-  };
-
-  const loadFamilyMembers = async () => {
-    if (!preferenceId) return;
-    try {
-      const response = await fetch(`/api/family/members/${preferenceId}`);
-      if (response.ok) {
-        const data = await response.json();
-        setFamilyMembers(data.members || []);
-      }
-    } catch (error) {
-      console.error("Error loading family members:", error);
-    }
-  };
+  // loadShareableLinks and loadFamilyMembers moved above to useCallback
 
   const createShareableLink = async () => {
     if (!preferenceId) {

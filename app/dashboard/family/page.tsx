@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -30,27 +30,7 @@ export default function FamilyPage() {
     loadPreferenceId();
   }, []);
 
-  useEffect(() => {
-    if (preferenceId) {
-      loadFamilyMembers();
-    }
-  }, [preferenceId]);
-
-  const loadPreferenceId = async () => {
-    try {
-      const response = await fetch("/api/preferences");
-      if (response.ok) {
-        const data = await response.json();
-        if (data.preferences?.id) {
-          setPreferenceId(data.preferences.id);
-        }
-      }
-    } catch (error) {
-      console.error("Error loading preferences:", error);
-    }
-  };
-
-  const loadFamilyMembers = async () => {
+  const loadFamilyMembers = useCallback(async () => {
     if (!preferenceId) return;
     setLoading(true);
     try {
@@ -63,6 +43,26 @@ export default function FamilyPage() {
       console.error("Error loading family members:", error);
     } finally {
       setLoading(false);
+    }
+  }, [preferenceId]);
+
+  useEffect(() => {
+    if (preferenceId) {
+      loadFamilyMembers();
+    }
+  }, [preferenceId, loadFamilyMembers]);
+
+  const loadPreferenceId = async () => {
+    try {
+      const response = await fetch("/api/preferences");
+      if (response.ok) {
+        const data = await response.json();
+        if (data.preferences?.id) {
+          setPreferenceId(data.preferences.id);
+        }
+      }
+    } catch (error) {
+      console.error("Error loading preferences:", error);
     }
   };
 
