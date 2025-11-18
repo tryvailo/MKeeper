@@ -267,6 +267,7 @@ export async function logActivity(userId: string, action: string, details?: stri
 }
 
 export async function getActivityLogs(userId: string): Promise<ActivityLog[]> {
+  // Initialize Supabase client
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("activity_logs")
