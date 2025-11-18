@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { UserPreferences } from "@/lib/supabase";
@@ -63,21 +63,7 @@ export default function OnboardingPage() {
     setStepStartTime(Date.now());
   }, [step]);
 
-  // Auto-save on step change (only if we have meaningful data)
-  useEffect(() => {
-    if (step > 1 && step < 6) {
-      // Only auto-save if we have at least one answer with 10+ characters
-      const hasData = Object.values(formData).some((value) => 
-        value && typeof value === 'string' && value.trim().length >= 10
-      );
-      
-      if (hasData) {
-        autoSave();
-      }
-    }
-  }, [step]); // Remove formData from dependencies to avoid too many calls
-
-  const autoSave = async () => {
+  const autoSave = useCallback(async () => {
     try {
       // Only save if we have meaningful data
       const hasData = Object.values(formData).some((value) => 
@@ -101,7 +87,21 @@ export default function OnboardingPage() {
       // Auto-save errors are non-critical, just log them
       console.warn("Auto-save failed (non-critical):", error);
     }
-  };
+  }, [formData]);
+
+  // Auto-save on step change (only if we have meaningful data)
+  useEffect(() => {
+    if (step > 1 && step < 6) {
+      // Only auto-save if we have at least one answer with 10+ characters
+      const hasData = Object.values(formData).some((value) => 
+        value && typeof value === 'string' && value.trim().length >= 10
+      );
+      
+      if (hasData) {
+        autoSave();
+      }
+    }
+  }, [step, formData, autoSave]);
 
   const formatTime = (seconds: number): string => {
     const mins = Math.floor(seconds / 60);
