@@ -305,6 +305,7 @@ export async function getFamilyMembers(preferencesId: string, userId?: string): 
     }
   }
 
+  const supabase = await createClient();
   const { data, error } = await supabase
     .from("family_members")
     .select("*")
@@ -366,6 +367,7 @@ export async function createFamilyMember(
   // Generate unique sharing token
   const sharingToken = generateSharingToken();
 
+  const supabase = await createClient();
   const { data, error } = await supabase
     .from("family_members")
     .insert({
@@ -404,6 +406,7 @@ export async function updateFamilyMember(
     return null;
   }
 
+  const supabase = await createClient();
   // Get the member to find preferences_id
   const { data: member, error: fetchError } = await supabase
     .from("family_members")
@@ -452,6 +455,7 @@ export async function deleteFamilyMember(memberId: string): Promise<boolean> {
     return false;
   }
 
+  const supabase = await createClient();
   // Get the member to find preferences_id
   const { data: member, error: fetchError } = await supabase
     .from("family_members")
@@ -498,6 +502,7 @@ export async function getShareableLinks(preferencesId?: string): Promise<Shareab
     return [];
   }
 
+  const supabase = await createClient();
   let query = supabase
     .from("shareable_links")
     .select("*")
@@ -550,6 +555,7 @@ export async function createShareableLink(
   const expiresAt = new Date(now);
   expiresAt.setDate(expiresAt.getDate() + expirationDays);
 
+  const supabase = await createClient();
   const { data, error } = await supabase
     .from("shareable_links")
     .insert({
@@ -588,6 +594,7 @@ export async function updateShareableLink(
     return null;
   }
 
+  const supabase = await createClient();
   // Verify user owns the link
   const { data: existingLink, error: fetchError } = await supabase
     .from("shareable_links")
@@ -654,6 +661,7 @@ export async function extendShareableLink(linkId: string, days: number = 30): Pr
     return null;
   }
 
+  const supabase = await createClient();
   // Get current link
   const { data: link, error: fetchError } = await supabase
     .from("shareable_links")
@@ -819,6 +827,7 @@ export async function getFiles(preferencesId: string, userId?: string): Promise<
     }
   }
 
+  const supabase = await createClient();
   const { data, error } = await supabase
     .from("files")
     .select("*")
@@ -987,6 +996,7 @@ export async function createComment(
 
   // If family_member_id is provided, verify it exists and has comment permissions
   if (familyMemberId) {
+    const supabase = await createClient();
     const { data: member, error: memberError } = await supabase
       .from("family_members")
       .select("access_level, preferences_id")
@@ -1010,6 +1020,7 @@ export async function createComment(
     }
   }
 
+  const supabase = await createClient();
   const { data, error } = await supabase
     .from("comments")
     .insert({
@@ -1051,6 +1062,7 @@ export async function updateComment(commentId: string, content: string): Promise
     return null;
   }
 
+  const supabase = await createClient();
   // Get comment with related data
   const { data: comment, error: fetchError } = await supabase
     .from("comments")
@@ -1168,6 +1180,7 @@ export async function getNotifications(unreadOnly: boolean = false): Promise<Not
     return [];
   }
 
+  const supabase = await createClient();
   let query = supabase
     .from("notifications")
     .select("*")
@@ -1197,6 +1210,7 @@ export async function getUnreadNotificationCount(): Promise<number> {
     return 0;
   }
 
+  const supabase = await createClient();
   const { count, error } = await supabase
     .from("notifications")
     .select("*", { count: "exact", head: true })
@@ -1221,6 +1235,7 @@ export async function createNotification(
   message: string,
   metadata?: any
 ): Promise<Notification | null> {
+  const supabase = await createClient();
   const { data, error } = await supabase
     .from("notifications")
     .insert({
@@ -1250,6 +1265,7 @@ export async function markAsRead(notificationId: string): Promise<boolean> {
     return false;
   }
 
+  const supabase = await createClient();
   // Verify notification belongs to user
   const { data: notification, error: fetchError } = await supabase
     .from("notifications")
@@ -1295,6 +1311,7 @@ export async function markAllAsRead(): Promise<boolean> {
     return false;
   }
 
+  const supabase = await createClient();
   const { error } = await supabase
     .from("notifications")
     .update({ read_at: new Date().toISOString() })
