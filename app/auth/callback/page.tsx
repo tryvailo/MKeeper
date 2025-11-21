@@ -5,6 +5,9 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 
+// Force dynamic rendering since we use searchParams
+export const dynamic = 'force-dynamic';
+
 function AuthCallbackContent() {
   const router = useRouter();
   const searchParams = useSearchParams();

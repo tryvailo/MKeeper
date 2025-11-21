@@ -8,6 +8,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
+// Force dynamic rendering since we use searchParams
+export const dynamic = 'force-dynamic';
+
 function ResetPasswordContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
