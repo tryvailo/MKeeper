@@ -26,7 +26,7 @@ export function generateEmailStory(
 
   // Header
   email += separator + "\n";
-  email += "  MEMORY KEEPER - " + userName.toUpperCase() + "\n";
+  email += "  LEGACY WORDS - " + userName.toUpperCase() + "\n";
   email += separator + "\n\n";
 
   // Statistics
@@ -69,8 +69,8 @@ export function generateEmailStory(
 
   // Footer
   email += separator + "\n";
-  email += "Generated via Memory Keeper\n";
-  email += "memorykeeper.app\n";
+  email += "Generated via Legacy Words\n";
+  email += "legacywords.co.uk\n";
   email += separator + "\n";
 
   return email;
@@ -93,11 +93,11 @@ export function generateEmailStoryHTML(
     <head>
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width, initial-scale=1.0">
-      <title>${userName} - Memory Keeper</title>
+      <title>${userName} - Legacy Words</title>
     </head>
     <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; line-height: 1.6; color: #111827; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f9fafb;">
       <div style="background-color: #ffffff; border-radius: 8px; padding: 40px; border: 1px solid #e5e7eb;">
-        <h1 style="color: #1E40AF; font-size: 28px; margin-bottom: 10px; text-align: center;">Memory Keeper</h1>
+        <h1 style="color: #1E40AF; font-size: 28px; margin-bottom: 10px; text-align: center;">Legacy Words</h1>
         <h2 style="color: #374151; font-size: 22px; margin-bottom: 30px; text-align: center; font-weight: normal;">${userName}</h2>
   `;
 
@@ -155,8 +155,8 @@ export function generateEmailStoryHTML(
   html += `
         <div style="margin-top: 40px; padding-top: 20px; border-top: 1px solid #e5e7eb; text-align: center;">
           <p style="font-size: 12px; color: #9CA3AF; margin: 0;">
-            Generated via Memory Keeper<br>
-            <a href="https://memorykeeper.app" style="color: #1E40AF; text-decoration: none;">memorykeeper.app</a>
+            Generated via Legacy Words<br>
+            <a href="https://legacywords.co.uk" style="color: #1E40AF; text-decoration: none;">legacywords.co.uk</a>
           </p>
         </div>
       </div>
@@ -200,8 +200,8 @@ export function generateFamilyEmail(
           </p>
           <div style="background-color: #f3f4f6; border-left: 4px solid #1E40AF; padding: 16px; margin: 24px 0; border-radius: 4px;">
             <p style="margin: 0; font-size: 14px; color: #374151;">
-              <strong>What is Memory Keeper?</strong><br>
-              Memory Keeper helps dementia families preserve their loved one's story—who they are, what matters to them—before memories fade.
+              <strong>What is Legacy Words?</strong><br>
+              Legacy Words helps dementia families preserve their loved one's story—who they are, what matters to them—before memories fade.
             </p>
           </div>
           <div style="margin: 32px 0;">
@@ -212,13 +212,13 @@ export function generateFamilyEmail(
           </div>
           <p style="font-size: 12px; color: #9CA3AF; margin-top: 32px; padding-top: 24px; border-top: 1px solid #e5e7eb;">
             With care,<br>
-            The Memory Keeper Team
+            The Legacy Words Team
           </p>
         </div>
       </body>
       </html>
     `,
-    text: `Hi there,\n\n${senderName} wanted to share something important with you: their loved one's story.\n\n${emailText}\n\nWith care,\nThe Memory Keeper Team`,
+    text: `Hi there,\n\n${senderName} wanted to share something important with you: their loved one's story.\n\n${emailText}\n\nWith care,\nThe Legacy Words Team`,
   }));
 }
 

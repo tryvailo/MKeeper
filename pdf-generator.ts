@@ -72,7 +72,7 @@ export async function generateMemoryPDF(
     doc.setTextColor(255, 255, 255);
     doc.setFontSize(32);
     doc.setFont(font, "bold");
-    doc.text("Memory Keeper", pageWidth / 2, pageHeight / 2 - 20, { align: "center" });
+    doc.text("Legacy Words", pageWidth / 2, pageHeight / 2 - 20, { align: "center" });
     
     doc.setFontSize(18);
     doc.setFont(font, "normal");
@@ -185,7 +185,7 @@ export async function generateMemoryPDF(
     doc.setFont(font, "italic");
     doc.setTextColor(128, 128, 128);
     doc.text(
-      `Page ${i} of ${totalPages} | Memory Keeper - memorykeeper.app`,
+      `Page ${i} of ${totalPages} | Legacy Words - legacywords.co.uk`,
       pageWidth / 2,
       pageHeight - 10,
       { align: "center" }

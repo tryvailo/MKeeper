@@ -10,7 +10,7 @@ export async function generatePDF(preferences: UserPreferences, userName: string
   // Header
   doc.setFontSize(20);
   doc.setFont("helvetica", "bold");
-  doc.text("Memory Keeper - Their Story", pageWidth / 2, yPosition, { align: "center" });
+  doc.text("Legacy Words - Their Story", pageWidth / 2, yPosition, { align: "center" });
   yPosition += 15;
 
   doc.setFontSize(12);

@@ -7,24 +7,43 @@ export interface EmailTemplate {
   html: string;
 }
 
-export async function sendEmail(template: EmailTemplate): Promise<{ success: boolean; messageId?: string }> {
-  // Mock implementation - in production this will send emails via Resend
-  console.log("📧 Email would be sent:", {
-    to: template.to,
-    subject: template.subject,
-    timestamp: new Date().toISOString(),
-  });
-  
-  // In development mode, also log HTML to console for preview
-  if (process.env.NODE_ENV === "development") {
-    console.log("📧 Email HTML preview:", template.html.substring(0, 200) + "...");
+export async function sendEmail(template: EmailTemplate): Promise<{ success: boolean; messageId?: string; message?: string }> {
+  // Validate email format
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(template.to)) {
+    return {
+      success: false,
+      message: "Invalid email address format",
+    };
   }
 
-  // Simulate successful email send
-  return {
-    success: true,
-    messageId: `mock-${Date.now()}`,
-  };
+  try {
+    // Mock implementation - in production this will send emails via Resend
+    console.log("📧 Email would be sent:", {
+      to: template.to,
+      subject: template.subject,
+      timestamp: new Date().toISOString(),
+    });
+    
+    // In development mode, also log HTML to console for preview
+    if (process.env.NODE_ENV === "development") {
+      console.log("📧 Email HTML preview:", template.html.substring(0, 200) + "...");
+    }
+
+    // Simulate successful email send
+    // In production, this would call Resend API here
+    return {
+      success: true,
+      messageId: `mock-${Date.now()}`,
+    };
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : "Unknown error sending email";
+    console.error("Error in sendEmail:", errorMessage);
+    return {
+      success: false,
+      message: errorMessage,
+    };
+  }
 }
 
 export async function sendWelcomeEmail(email: string, name: string) {
@@ -34,18 +53,18 @@ export async function sendWelcomeEmail(email: string, name: string) {
     <head>
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width, initial-scale=1.0">
-      <title>Welcome to Memory Keeper</title>
+      <title>Welcome to Legacy Words</title>
     </head>
     <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; line-height: 1.6; color: #111827; max-width: 600px; margin: 0 auto; padding: 20px;">
       <div style="background-color: #ffffff; border-radius: 8px; padding: 40px; border: 1px solid #e5e7eb;">
-        <h1 style="color: #1E40AF; font-size: 28px; margin-bottom: 20px;">Welcome to Memory Keeper</h1>
+        <h1 style="color: #1E40AF; font-size: 28px; margin-bottom: 20px;">Welcome to Legacy Words</h1>
         
         <p style="font-size: 16px; margin-bottom: 20px;">
           Hi ${name},
         </p>
         
         <p style="font-size: 16px; margin-bottom: 20px;">
-          Thank you for joining Memory Keeper. You've taken an important step to preserve what matters most—their story, their voice, their essence.
+          Thank you for joining Legacy Words. You've taken an important step to preserve what matters most—their story, their voice, their essence.
         </p>
         
         <div style="background-color: #eff6ff; border-left: 4px solid #1E40AF; padding: 16px; margin: 24px 0; border-radius: 4px;">
@@ -56,18 +75,18 @@ export async function sendWelcomeEmail(email: string, name: string) {
         </div>
         
         <div style="text-align: center; margin: 32px 0;">
-          <a href="${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/onboarding" style="display: inline-block; background-color: #1E40AF; color: #ffffff; text-decoration: none; padding: 12px 32px; border-radius: 6px; font-weight: 600; font-size: 16px;">
+          <a href="${process.env.NEXT_PUBLIC_APP_URL || "https://legacywords.co.uk"}/onboarding" style="display: inline-block; background-color: #1E40AF; color: #ffffff; text-decoration: none; padding: 12px 32px; border-radius: 6px; font-weight: 600; font-size: 16px;">
             Start Capturing Their Story
           </a>
         </div>
         
         <p style="font-size: 14px; color: #6B7280; margin-top: 32px; padding-top: 24px; border-top: 1px solid #e5e7eb;">
-          Memory Keeper is completely free. Always will be. No payment ever. No hidden fees.
+          Legacy Words is completely free. Always will be. No payment ever. No hidden fees.
         </p>
         
         <p style="font-size: 12px; color: #9CA3AF; margin-top: 24px;">
           With care,<br>
-          The Memory Keeper Team
+          The Legacy Words Team
         </p>
       </div>
     </body>
@@ -76,7 +95,7 @@ export async function sendWelcomeEmail(email: string, name: string) {
 
   return sendEmail({
     to: email,
-    subject: "Welcome to Memory Keeper",
+    subject: "Welcome to Legacy Words",
     html,
   });
 }
@@ -119,8 +138,8 @@ export async function sendShareInviteEmail(
         
         <div style="background-color: #f3f4f6; border-left: 4px solid #1E40AF; padding: 16px; margin: 24px 0; border-radius: 4px;">
           <p style="margin: 0; font-size: 14px; color: #374151;">
-            <strong>What is Memory Keeper?</strong><br>
-            Memory Keeper helps dementia families preserve their loved one's story—who they are, what matters to them—before memories fade. This helps ensure their voice, values, and essence are preserved forever.
+            <strong>What is Legacy Words?</strong><br>
+            Legacy Words helps dementia families preserve their loved one's story—who they are, what matters to them—before memories fade. This helps ensure their voice, values, and essence are preserved forever.
           </p>
         </div>
         
@@ -140,7 +159,7 @@ export async function sendShareInviteEmail(
         
         <p style="font-size: 12px; color: #9CA3AF; margin-top: 16px;">
           With care,<br>
-          The Memory Keeper Team
+          The Legacy Words Team
         </p>
       </div>
     </body>
@@ -180,7 +199,7 @@ export async function sendAnnualReminderEmail(email: string, name: string) {
         </p>
         
         <div style="text-align: center; margin: 32px 0;">
-          <a href="${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/dashboard" style="display: inline-block; background-color: #1E40AF; color: #ffffff; text-decoration: none; padding: 12px 32px; border-radius: 6px; font-weight: 600; font-size: 16px;">
+          <a href="${process.env.NEXT_PUBLIC_APP_URL || "https://legacywords.co.uk"}/dashboard" style="display: inline-block; background-color: #1E40AF; color: #ffffff; text-decoration: none; padding: 12px 32px; border-radius: 6px; font-weight: 600; font-size: 16px;">
             Add More Memories
           </a>
         </div>
@@ -191,7 +210,7 @@ export async function sendAnnualReminderEmail(email: string, name: string) {
         
         <p style="font-size: 12px; color: #9CA3AF; margin-top: 24px;">
           With care,<br>
-          The Memory Keeper Team
+          The Legacy Words Team
         </p>
       </div>
     </body>
