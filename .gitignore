@@ -70,3 +70,6 @@ MemoryK/
 Thumbs.db
 
 MemoryKeeper/
+
+# legacy-words reference project (not part of main codebase)
+/legacy-words
