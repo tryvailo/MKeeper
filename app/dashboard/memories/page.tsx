@@ -44,12 +44,21 @@ export default function MemoriesPage() {
       const response = await fetch("/api/preferences");
       if (response.ok) {
         const data = await response.json();
+        console.log("MemoriesPage: Loaded preferences:", data.preferences);
+        console.log("MemoriesPage: interview_data exists:", !!data.preferences?.interview_data);
+        console.log("MemoriesPage: interview_data keys:", data.preferences?.interview_data ? Object.keys(data.preferences.interview_data) : "none");
+        
         setSavedPreferences(data.preferences);
         
         // Load existing answers from interview_data
         if (data.preferences?.interview_data) {
+          console.log("MemoriesPage: Setting formData from interview_data");
           setFormData(data.preferences.interview_data);
+        } else {
+          console.log("MemoriesPage: No interview_data found, formData will be empty");
         }
+      } else {
+        console.error("MemoriesPage: Failed to load preferences, status:", response.status);
       }
     } catch (error) {
       console.error("Error loading preferences:", error);
@@ -87,17 +96,29 @@ export default function MemoriesPage() {
   const handleSave = async () => {
     setLoading(true);
     try {
+      console.log("MemoriesPage: Saving formData, keys:", Object.keys(formData));
+      console.log("MemoriesPage: Sample data:", Object.keys(formData).slice(0, 3).map(k => ({ key: k, length: formData[k]?.length || 0 })));
+      
       const response = await fetch("/api/preferences", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(formData),
       });
 
+      console.log("MemoriesPage: Save response status:", response.status);
+      console.log("MemoriesPage: Save response ok:", response.ok);
+
       if (response.ok) {
+        const result = await response.json();
+        console.log("MemoriesPage: Save successful, result:", result);
+        console.log("MemoriesPage: Result interview_data:", result.preferences?.interview_data);
+        
         await loadPreferences();
         alert("Your memories have been saved!");
       } else {
-        throw new Error("Failed to save");
+        const errorData = await response.json().catch(() => ({}));
+        console.error("MemoriesPage: Save failed, error:", errorData);
+        throw new Error(errorData.error || "Failed to save");
       }
     } catch (error) {
       console.error("Error saving:", error);

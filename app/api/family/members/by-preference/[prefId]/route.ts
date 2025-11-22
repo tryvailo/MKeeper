@@ -1,47 +1,37 @@
-import { promises as fs } from "fs";
-import path from "path";
 import { NextRequest, NextResponse } from "next/server";
+import { getFamilyMembers, getCurrentUserId, getUserPreferences } from "@/lib/api";
+import { handleApiError, handleUnauthorizedError, handleNotFoundError, handleBadRequestError } from "@/lib/api-error-handler";
 
 export const dynamic = 'force-dynamic';
 
-const DATA_DIR = path.join(process.cwd(), "data");
-const FAMILY_MEMBERS_FILE = path.join(DATA_DIR, "family_members.json");
-
-async function ensureDataDir() {
-  try {
-    await fs.mkdir(DATA_DIR, { recursive: true });
-  } catch (error) {
-    // Directory might already exist
-  }
-}
-
-async function readFamilyMembers() {
-  await ensureDataDir();
-  try {
-    const data = await fs.readFile(FAMILY_MEMBERS_FILE, "utf-8");
-    return JSON.parse(data);
-  } catch (error) {
-    return [];
-  }
-}
-
-// GET /api/family/members/:prefId - List who has access
+// GET /api/family/members/by-preference/:prefId - List who has access
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ prefId: string }> }
 ) {
   try {
-    const userId = "temp-user"; // Temporary mock user ID
+    const userId = await getCurrentUserId();
+    if (!userId) {
+      return handleUnauthorizedError();
+    }
 
     const { prefId } = await params;
 
-    const familyMembers = await readFamilyMembers();
-    const members = familyMembers.filter((m: any) => m.preferences_id === prefId);
+    if (!prefId || prefId.trim().length === 0) {
+      return handleBadRequestError("Preference ID is required");
+    }
+
+    // Verify user owns the preferences
+    const preferences = await getUserPreferences(userId);
+    if (!preferences || preferences.id !== prefId) {
+      return handleNotFoundError("Preferences not found");
+    }
+
+    // Get family members for this preference
+    const members = await getFamilyMembers(prefId);
 
     return NextResponse.json({ members });
   } catch (error) {
-    console.error("Error fetching family members:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return handleApiError(error, "Failed to fetch family members");
   }
 }
-

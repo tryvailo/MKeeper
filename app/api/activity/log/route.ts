@@ -1,65 +1,47 @@
-import { promises as fs } from "fs";
-import path from "path";
 import { NextRequest, NextResponse } from "next/server";
+import { logActivity, getCurrentUserId } from "@/lib/api";
+import { activityLogSchema, validateData } from "@/lib/validation";
+import { getUserFriendlyError, isConnectionError } from "@/lib/supabase-error-handler";
 
 export const dynamic = 'force-dynamic';
 
-const DATA_DIR = path.join(process.cwd(), "data");
-const ACTIVITY_FILE = path.join(DATA_DIR, "activity.json");
-
-// Ensure data directory exists
-async function ensureDataDir() {
-  try {
-    await fs.mkdir(DATA_DIR, { recursive: true });
-  } catch (error) {
-    // Directory might already exist
-  }
-}
-
-// Read activity logs from file
-async function readActivity() {
-  await ensureDataDir();
-  try {
-    const data = await fs.readFile(ACTIVITY_FILE, "utf-8");
-    return JSON.parse(data);
-  } catch (error) {
-    return [];
-  }
-}
-
-// Write activity logs to file
-async function writeActivity(data: any[]) {
-  try {
-    await ensureDataDir();
-    await fs.writeFile(ACTIVITY_FILE, JSON.stringify(data, null, 2), "utf-8");
-  } catch (error) {
-    // Ignore file write errors (filesystem not available on Vercel)
-    console.warn("File write failed (expected on Vercel):", error);
-  }
-}
-
 export async function POST(request: NextRequest) {
   try {
-    // TEMPORARILY DISABLED: No auth required for testing
-    // const userId = "temp-user"; // Temporary mock user ID
-    // }
-    const userId = "temp-user"; // Temporary mock user ID
+    const userId = await getCurrentUserId();
+    if (!userId) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
 
-    const { action, details } = await request.json();
+    let body;
+    try {
+      body = await request.json();
+    } catch (error) {
+      return NextResponse.json(
+        { error: "Invalid JSON in request body" },
+        { status: 400 }
+      );
+    }
 
-    const activityLogs = await readActivity();
-    activityLogs.push({
-      id: `log_${Date.now()}`,
-      user_id: userId,
-      action,
-      details,
-      created_at: new Date().toISOString(),
-    });
-    await writeActivity(activityLogs);
+    // Validate input data
+    const validation = validateData(activityLogSchema, body);
+    if (!validation.success) {
+      return NextResponse.json(
+        { error: "Validation failed", errors: validation.errors },
+        { status: 400 }
+      );
+    }
+
+    const { action, details } = validation.data;
+
+    await logActivity(userId, action, details || undefined);
 
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error("Error logging activity:", error);
-    return NextResponse.json({ error: "Failed to log activity" }, { status: 500 });
+    const statusCode = isConnectionError(error) ? 503 : 500;
+    return NextResponse.json(
+      { error: getUserFriendlyError(error) },
+      { status: statusCode }
+    );
   }
 }

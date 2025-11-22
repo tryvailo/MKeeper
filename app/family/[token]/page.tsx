@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import { UserPreferences } from "@/lib/supabase";
@@ -15,7 +15,13 @@ export default function FamilyDashboardPage() {
   const [comment, setComment] = useState("");
   const [comments, setComments] = useState<string[]>([]);
 
-  const loadSharedPreferences = useCallback(async () => {
+  useEffect(() => {
+    if (accessToken) {
+      loadSharedPreferences();
+    }
+  }, [accessToken]);
+
+  const loadSharedPreferences = async () => {
     try {
       // Get shared preferences via API
       const response = await fetch(`/api/family/${accessToken}`);
@@ -34,13 +40,7 @@ export default function FamilyDashboardPage() {
     } finally {
       setLoading(false);
     }
-  }, [accessToken]);
-
-  useEffect(() => {
-    if (accessToken) {
-      loadSharedPreferences();
-    }
-  }, [accessToken, loadSharedPreferences]);
+  };
 
   const handleAddComment = () => {
     if (comment.trim()) {

@@ -7,24 +7,43 @@ export interface EmailTemplate {
   html: string;
 }
 
-export async function sendEmail(template: EmailTemplate): Promise<{ success: boolean; messageId?: string }> {
-  // Mock implementation - in production this will send emails via Resend
-  console.log("📧 Email would be sent:", {
-    to: template.to,
-    subject: template.subject,
-    timestamp: new Date().toISOString(),
-  });
-  
-  // In development mode, also log HTML to console for preview
-  if (process.env.NODE_ENV === "development") {
-    console.log("📧 Email HTML preview:", template.html.substring(0, 200) + "...");
+export async function sendEmail(template: EmailTemplate): Promise<{ success: boolean; messageId?: string; message?: string }> {
+  // Validate email format
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(template.to)) {
+    return {
+      success: false,
+      message: "Invalid email address format",
+    };
   }
 
-  // Simulate successful email send
-  return {
-    success: true,
-    messageId: `mock-${Date.now()}`,
-  };
+  try {
+    // Mock implementation - in production this will send emails via Resend
+    console.log("📧 Email would be sent:", {
+      to: template.to,
+      subject: template.subject,
+      timestamp: new Date().toISOString(),
+    });
+    
+    // In development mode, also log HTML to console for preview
+    if (process.env.NODE_ENV === "development") {
+      console.log("📧 Email HTML preview:", template.html.substring(0, 200) + "...");
+    }
+
+    // Simulate successful email send
+    // In production, this would call Resend API here
+    return {
+      success: true,
+      messageId: `mock-${Date.now()}`,
+    };
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : "Unknown error sending email";
+    console.error("Error in sendEmail:", errorMessage);
+    return {
+      success: false,
+      message: errorMessage,
+    };
+  }
 }
 
 export async function sendWelcomeEmail(email: string, name: string) {

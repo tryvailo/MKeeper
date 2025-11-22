@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Preferences, ActivityLog } from "@/lib/supabase";
@@ -41,7 +41,18 @@ export default function DashboardPage() {
   const [sharingLoading, setSharingLoading] = useState(false);
   const [showWelcome, setShowWelcome] = useState(true);
 
-  const loadData = useCallback(async () => {
+  useEffect(() => {
+    if (authLoading) return;
+    
+    if (!user) {
+      router.push("/sign-in");
+      return;
+    }
+
+    loadData();
+  }, [user, authLoading, router]);
+
+  const loadData = async () => {
     if (!user?.id) return;
 
     setLoading(true);
@@ -62,18 +73,7 @@ export default function DashboardPage() {
     } finally {
       setLoading(false);
     }
-  }, [user?.id]);
-
-  useEffect(() => {
-    if (authLoading) return;
-    
-    if (!user) {
-      router.push("/sign-in");
-      return;
-    }
-
-    loadData();
-  }, [user, authLoading, router, loadData]);
+  };
 
   const handleShare = async () => {
     if (!sharingEmail || !preferences?.id) return;

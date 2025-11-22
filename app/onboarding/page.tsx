@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { UserPreferences } from "@/lib/supabase";
@@ -12,6 +12,7 @@ import {
   getTotalDuration,
   calculateWordCount,
   validateAnswer,
+  getAllQuestions,
   type InterviewQuestion,
 } from "@/lib/interview";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -19,7 +20,7 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useAuth } from "@/lib/hooks/useAuth";
-import { ArrowLeft, Clock, CheckCircle2, AlertCircle } from "lucide-react";
+import { ArrowLeft, Clock, CheckCircle2, AlertCircle, Loader2 } from "lucide-react";
 
 const TOTAL_STEPS = 6; // 5 categories + Review
 
@@ -27,6 +28,9 @@ export default function OnboardingPage() {
   const { user, loading: authLoading } = useAuth();
   const router = useRouter();
   const [loading, setLoading] = useState(false);
+  const [saving, setSaving] = useState(false); // For auto-save indicator
+  const [lastSaved, setLastSaved] = useState<Date | null>(null); // Track last successful save
+  const [version, setVersion] = useState<number | undefined>(undefined); // For optimistic locking
   const [step, setStep] = useState<InterviewStep>(1);
   const [formData, setFormData] = useState<Record<string, string>>({});
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -43,7 +47,86 @@ export default function OnboardingPage() {
       router.push("/sign-in");
       return;
     }
-  }, [user, authLoading, router]);
+
+    // Load existing interview data when user returns to onboarding
+    loadExistingData();
+  }, [user, authLoading, router, loadExistingData, loadFromLocalStorage, saveToLocalStorage]);
+
+  // Save to localStorage as fallback
+  const saveToLocalStorage = useCallback((data: Record<string, string>) => {
+    try {
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('memories_draft', JSON.stringify({
+          data,
+          timestamp: Date.now(),
+        }));
+      }
+    } catch (error) {
+      console.warn("Failed to save to localStorage:", error);
+    }
+  }, []);
+
+  // Load from localStorage
+  const loadFromLocalStorage = useCallback((): Record<string, string> | null => {
+    try {
+      if (typeof window !== 'undefined') {
+        const stored = localStorage.getItem('memories_draft');
+        if (stored) {
+          const parsed = JSON.parse(stored);
+          // Check that data is not older than 7 days
+          if (Date.now() - parsed.timestamp < 7 * 24 * 60 * 60 * 1000) {
+            return parsed.data;
+          } else {
+            // Remove expired data
+            localStorage.removeItem('memories_draft');
+          }
+        }
+      }
+    } catch (error) {
+      console.warn("Failed to load from localStorage:", error);
+    }
+    return null;
+  }, []);
+
+  const loadExistingData = useCallback(async () => {
+    if (!user?.id) return;
+    
+    // First, try to load from localStorage (faster, works offline)
+    const localData = loadFromLocalStorage();
+    if (localData && Object.keys(localData).length > 0) {
+      console.log("OnboardingPage: Loaded from localStorage:", Object.keys(localData).length, "fields");
+      setFormData(localData);
+    }
+    
+    // Then, try to load from server (most up-to-date)
+    try {
+      const response = await fetch("/api/preferences");
+      if (response.ok) {
+        const data = await response.json();
+        console.log("OnboardingPage: Loaded existing preferences:", data.preferences);
+        console.log("OnboardingPage: interview_data exists:", !!data.preferences?.interview_data);
+        console.log("OnboardingPage: interview_data keys:", data.preferences?.interview_data ? Object.keys(data.preferences.interview_data) : "none");
+        
+        // Load existing answers from interview_data
+        if (data.preferences?.interview_data) {
+          console.log("OnboardingPage: Setting formData from existing interview_data");
+          setFormData(data.preferences.interview_data);
+          // Update localStorage with server data
+          saveToLocalStorage(data.preferences.interview_data);
+        } else {
+          console.log("OnboardingPage: No existing interview_data found");
+        }
+        
+        // Store version for optimistic locking
+        if (data.preferences?.version !== undefined) {
+          setVersion(data.preferences.version);
+        }
+      }
+    } catch (error) {
+      console.error("OnboardingPage: Error loading from server, using localStorage data if available:", error);
+      // If server fails, we already have localStorage data loaded above
+    }
+  }, [user?.id, loadFromLocalStorage, saveToLocalStorage]);
 
   // Timer effect
   useEffect(() => {
@@ -74,22 +157,54 @@ export default function OnboardingPage() {
         return; // Skip auto-save if no meaningful data
       }
       
+      // Always save to localStorage first (fast, works offline)
+      saveToLocalStorage(formData);
+      
+      // Then try to save to server
       const response = await fetch("/api/preferences", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(formData),
       });
       
-      if (!response.ok) {
-        console.warn("Auto-save failed (non-critical):", response.status);
+      if (response.ok) {
+        // Successfully saved to server, can clear localStorage draft
+        if (typeof window !== 'undefined') {
+          localStorage.removeItem('memories_draft');
+        }
+      } else {
+        console.warn("Auto-save failed (non-critical), data saved to localStorage:", response.status);
       }
     } catch (error) {
-      // Auto-save errors are non-critical, just log them
-      console.warn("Auto-save failed (non-critical):", error);
+      // Auto-save errors are non-critical, data is saved to localStorage
+      console.warn("Auto-save failed (non-critical), data saved to localStorage:", error);
     }
-  }, [formData]);
+  }, [formData, saveToLocalStorage]);
+
+  // Debounce function to prevent race conditions
+  const debounce = useCallback(<T extends (...args: any[]) => any>(
+    func: T,
+    wait: number
+  ): ((...args: Parameters<T>) => void) => {
+    let timeout: NodeJS.Timeout | null = null;
+    return function executedFunction(...args: Parameters<T>) {
+      const later = () => {
+        timeout = null;
+        func(...args);
+      };
+      if (timeout) clearTimeout(timeout);
+      timeout = setTimeout(later, wait);
+    };
+  }, []);
+
+  // Debounced version of autoSave to prevent race conditions
+  const debouncedAutoSave = useMemo(
+    () => debounce(autoSave, 2000), // 2 seconds delay
+    [autoSave, debounce]
+  );
 
   // Auto-save on step change (only if we have meaningful data)
+  // Using debounced version to prevent race conditions
   useEffect(() => {
     if (step > 1 && step < 6) {
       // Only auto-save if we have at least one answer with 10+ characters
@@ -98,10 +213,10 @@ export default function OnboardingPage() {
       );
       
       if (hasData) {
-        autoSave();
+        debouncedAutoSave();
       }
     }
-  }, [step, formData, autoSave]);
+  }, [step, formData, debouncedAutoSave]);
 
   const formatTime = (seconds: number): string => {
     const mins = Math.floor(seconds / 60);
@@ -184,13 +299,53 @@ export default function OnboardingPage() {
     }
   };
 
+  // Validate all answers before submission
+  const validateAllAnswers = (): { valid: boolean; errors: Record<string, string> } => {
+    const allErrors: Record<string, string> = {};
+    let isValid = true;
+    const allQuestions = getAllQuestions();
+
+    // Validate all provided answers
+    allQuestions.forEach((question) => {
+      const answer = formData[question.fieldName] || "";
+      // Only validate if user provided an answer (all questions are optional)
+      if (answer.trim().length > 0) {
+        const validation = validateAnswer(answer, question);
+        if (!validation.valid) {
+          allErrors[question.fieldName] = validation.error || "";
+          isValid = false;
+        }
+      }
+    });
+
+    return { valid: isValid, errors: allErrors };
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!reviewConfirmed) {
       alert("Please confirm that you've reviewed everything");
       return;
     }
+
+    // Validate all answers on client before submission
+    const validation = validateAllAnswers();
+    if (!validation.valid) {
+      setErrors(validation.errors);
+      // Scroll to first error
+      const firstErrorField = Object.keys(validation.errors)[0];
+      const errorElement = document.querySelector(`[name="${firstErrorField}"]`);
+      if (errorElement) {
+        errorElement.scrollIntoView({ behavior: "smooth", block: "center" });
+      }
+      alert("Please fix the errors before submitting. Some answers are too short.");
+      return;
+    }
+
     setLoading(true);
+
+    // Save to localStorage before attempting server save
+    saveToLocalStorage(formData);
 
     try {
       console.log("Submitting form data:", Object.keys(formData).length, "fields");
@@ -208,17 +363,28 @@ export default function OnboardingPage() {
       if (response.ok) {
         const result = await response.json();
         console.log("Successfully saved:", result);
+        // Clear localStorage draft after successful save
+        if (typeof window !== 'undefined') {
+          localStorage.removeItem('memories_draft');
+        }
+        setLastSaved(new Date()); // Update last saved timestamp
+        // Update version from server response
+        if (result.preferences?.version !== undefined) {
+          setVersion(result.preferences.version);
+        }
         router.push("/onboarding/complete?from=onboarding");
       } else {
         const errorData = await response.json().catch(() => ({}));
         console.error("Error response:", errorData);
         console.error("Response status:", response.status);
-        throw new Error(errorData.error || `Failed to save preferences (${response.status})`);
+        // Data is saved to localStorage, so user can retry later
+        throw new Error(errorData.error || `Failed to save preferences (${response.status}). Your data is saved locally and will be saved when connection is restored.`);
       }
     } catch (error) {
       console.error("Error saving preferences:", error);
       const errorMessage = error instanceof Error ? error.message : "Something went wrong. Please try again, or contact support if it keeps happening.";
-      alert(errorMessage);
+      // Data is already saved to localStorage, so user can retry
+      alert(errorMessage + "\n\nYour data has been saved locally and will be automatically saved when connection is restored.");
     } finally {
       setLoading(false);
     }
@@ -424,6 +590,23 @@ export default function OnboardingPage() {
           <p className="text-gray-600 mb-8">
             Take your time. There&apos;s no rush. All questions are optional - you can answer what you want now and fill in the rest later from your dashboard.
           </p>
+
+          {/* Save status indicator */}
+          {(saving || lastSaved) && (
+            <div className="mb-4 flex items-center justify-end">
+              {saving ? (
+                <div className="flex items-center gap-2 text-sm text-gray-600">
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  <span>Saving...</span>
+                </div>
+              ) : lastSaved ? (
+                <div className="flex items-center gap-2 text-sm text-green-600">
+                  <CheckCircle2 className="h-4 w-4" />
+                  <span>Saved {lastSaved.toLocaleTimeString()}</span>
+                </div>
+              ) : null}
+            </div>
+          )}
 
           {/* Progress indicator */}
           <div className="mb-8">

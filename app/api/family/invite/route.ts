@@ -59,15 +59,25 @@ export async function POST(request: NextRequest) {
     }
 
     // Create family member
-    const newMember = await createFamilyMember(preferenceId, {
-      name: validation.data.name,
-      email: validation.data.email,
-      relationship: validation.data.relationship,
-      access_level: validation.data.access_level,
-    });
+    let newMember;
+    try {
+      newMember = await createFamilyMember(preferenceId, {
+        name: validation.data.name,
+        email: validation.data.email,
+        relationship: validation.data.relationship,
+        access_level: validation.data.access_level,
+      });
 
-    if (!newMember) {
-      return NextResponse.json({ error: "Failed to create family member" }, { status: 500 });
+      if (!newMember) {
+        return NextResponse.json({ error: "Failed to create family member" }, { status: 500 });
+      }
+    } catch (memberError) {
+      // Handle duplicate email or self-addition errors
+      const errorMessage = memberError instanceof Error ? memberError.message : "Failed to create family member";
+      if (errorMessage.includes("already exists") || errorMessage.includes("cannot add yourself")) {
+        return NextResponse.json({ error: errorMessage }, { status: 400 });
+      }
+      throw memberError; // Re-throw other errors
     }
 
     // Create shared access record (legacy support)
@@ -97,8 +107,18 @@ export async function POST(request: NextRequest) {
       console.error("Error getting user info:", error);
     }
 
-    // Send email invitation
+    // Validate email format before sending
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      return NextResponse.json(
+        { error: "Invalid email format" },
+        { status: 400 }
+      );
+    }
+
+    // Send email invitation with improved error handling
     let emailSent = false;
+    let emailError: string | null = null;
     try {
       const emailResult = await sendShareInviteEmail(
         email,
@@ -111,10 +131,16 @@ export async function POST(request: NextRequest) {
 
       emailSent = emailResult.success || false;
       if (!emailSent) {
+        emailError = emailResult.message || "Failed to send email";
         console.error("Failed to send email:", emailResult);
       }
-    } catch (emailError) {
-      console.error("Error sending email:", emailError);
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : "Unknown error sending email";
+      emailError = errorMessage;
+      console.error("Error sending email:", errorMessage);
+      
+      // Don't fail the entire request if email fails - member is still created
+      // But log the error for monitoring
     }
 
     return NextResponse.json({
@@ -123,6 +149,12 @@ export async function POST(request: NextRequest) {
       accessToken: newMember.sharing_link_token,
       member: newMember,
       emailSent,
+      emailError: emailError || undefined, // Include error message if email failed
+      message: emailSent 
+        ? "Family member added and invitation email sent successfully"
+        : emailError 
+          ? `Family member added, but email could not be sent: ${emailError}. You can share the link manually.`
+          : "Family member added successfully",
     });
   } catch (error) {
     console.error("Error in family invite API:", error);

@@ -3,6 +3,7 @@ import crypto from "crypto";
 import { generateLinkToken, isLinkValid as validateLinkLogic } from "@/lib/shareable-links";
 import { createClient } from "@/lib/supabase/server";
 import type { User } from "@supabase/supabase-js";
+import { retryWithBackoff } from "@/lib/supabase-error-handler";
 
 /**
  * Get current user ID from Supabase Auth
@@ -50,25 +51,27 @@ export async function getCurrentUser(): Promise<User | null> {
  */
 export async function getUserPreferences(userId: string): Promise<Preferences | null> {
   try {
-    const supabase = await createClient();
-    const { data, error } = await supabase
-      .from("preferences")
-      .select("*")
-      .eq("user_id", userId)
-      .maybeSingle(); // Use maybeSingle instead of single to avoid errors when no record exists
+    return await retryWithBackoff(async () => {
+      const supabase = await createClient();
+      const { data, error } = await supabase
+        .from("preferences")
+        .select("*")
+        .eq("user_id", userId)
+        .maybeSingle(); // Use maybeSingle instead of single to avoid errors when no record exists
 
-    if (error) {
-      // Not found is not an error - user might not have preferences yet
-      if (error.code === "PGRST116" || error.message?.includes("No rows")) {
-        return null;
+      if (error) {
+        // Not found is not an error - user might not have preferences yet
+        if (error.code === "PGRST116" || error.message?.includes("No rows")) {
+          return null;
+        }
+        console.error("Error fetching preferences:", error);
+        throw error; // Throw to trigger retry for connection errors
       }
-      console.error("Error fetching preferences:", error);
-      return null;
-    }
 
-    return data;
+      return data;
+    });
   } catch (error) {
-    console.error("Exception in getUserPreferences:", error);
+    console.error("Exception in getUserPreferences after retries:", error);
     return null;
   }
 }
@@ -89,14 +92,15 @@ export async function saveUserPreferences(preferences: Partial<Preferences>): Pr
   console.log("saveUserPreferences: User ID type:", typeof userId);
 
   // Separate interview data from regular preferences
+  // This list must match all fieldName values from lib/interview.ts
   const interviewFields = [
     'happiest_memory', 'favorite_trip', 'unforgettable_day', 'proudest_moment', 'biggest_laugh',
     'loved_moment', 'best_friend', 'overcame_difficulty', 'met_partner', 'children_young',
     'funny_family_moment', 'passed_to_children', 'relationship_parents', 'family_together',
     'matters_most', 'most_proud', 'life_lessons', 'brings_peace', 'how_remembered',
     'regret_not_telling', 'greatest_strength', 'love_means', 'favorite_hobbies',
-    'important_people', 'places_love', 'favorite_things', 'message_family',
-    'message_friends', 'message_children', 'message_partner', 'message_other'
+    'important_people', 'places_love', 'favorite_things', 'personality',
+    'message_children', 'message_spouse', 'message_grandchildren', 'message_family', 'message_other'
   ];
 
   const interviewData: Record<string, string> = {};
@@ -105,8 +109,13 @@ export async function saveUserPreferences(preferences: Partial<Preferences>): Pr
   // Split data into interview and regular preferences
   Object.keys(preferences).forEach((key) => {
     const value = preferences[key as keyof Preferences];
-    if (interviewFields.includes(key) && value && typeof value === 'string' && value.trim().length > 0) {
-      interviewData[key] = value.trim();
+    // Include interview fields even if empty (to allow clearing answers)
+    // But only if they're explicitly provided (not undefined)
+    if (interviewFields.includes(key)) {
+      if (value !== undefined && value !== null) {
+        // Include the field even if empty string (allows clearing)
+        interviewData[key] = typeof value === 'string' ? value.trim() : String(value);
+      }
     } else if (key !== 'user_id' && key !== 'id' && value !== undefined && value !== null) {
       // Type-safe assignment using type assertion
       (regularPreferences as any)[key] = value;
@@ -135,21 +144,39 @@ export async function saveUserPreferences(preferences: Partial<Preferences>): Pr
     }
   }
 
-  // Check if record already exists
+  // Check if record already exists (with version for optimistic locking)
   const existing = await getUserPreferences(userId);
+  
+  // Optimistic locking: check if version matches (if provided)
+  if (existing && preferences.version !== undefined) {
+    if (existing.version !== preferences.version) {
+      console.error("Version mismatch: existing version", existing.version, "provided version", preferences.version);
+      throw new Error("This record was modified by another user. Please refresh and try again.");
+    }
+  }
 
   const supabase = await createClient();
   let data, error;
   
   // Merge interview data with existing if it exists
-  if (existing?.interview_data && Object.keys(interviewData).length > 0) {
-    preferencesWithUserId.interview_data = {
-      ...(existing.interview_data as Record<string, string>),
-      ...interviewData,
-    };
-  } else if (Object.keys(interviewData).length > 0 && !existing?.interview_data) {
-    // No existing interview_data, but we have new data
-    preferencesWithUserId.interview_data = interviewData;
+  // Always merge to preserve existing answers that weren't updated
+  if (Object.keys(interviewData).length > 0) {
+    if (existing?.interview_data) {
+      // Merge with existing data - new data overwrites old, but keeps other fields
+      preferencesWithUserId.interview_data = {
+        ...(existing.interview_data as Record<string, string>),
+        ...interviewData,
+      };
+      console.log("saveUserPreferences: Merged interview_data, total keys:", Object.keys(preferencesWithUserId.interview_data).length);
+    } else {
+      // No existing interview_data, use new data
+      preferencesWithUserId.interview_data = interviewData;
+      console.log("saveUserPreferences: Created new interview_data, keys:", Object.keys(interviewData).length);
+    }
+  } else if (existing?.interview_data) {
+    // No new interview data, but keep existing
+    preferencesWithUserId.interview_data = existing.interview_data as Record<string, string>;
+    console.log("saveUserPreferences: Keeping existing interview_data, keys:", Object.keys(preferencesWithUserId.interview_data).length);
   }
   
   // Remove id from update/insert data, but ensure user_id is set correctly
@@ -180,32 +207,83 @@ export async function saveUserPreferences(preferences: Partial<Preferences>): Pr
     console.log("saveUserPreferences: User verified in public.users:", userCheck.email);
   }
   
-  if (existing?.id) {
-    // Update existing record
-    ({ data, error } = await supabase
-      .from("preferences")
-      .update(dataToSave)
-      .eq("user_id", userId)
-      .select()
-      .single());
-  } else {
-    // Try to insert, but if it fails due to conflict, update instead
-    ({ data, error } = await supabase
-      .from("preferences")
-      .insert(dataToSave)
-      .select()
-      .single());
+  // Wrap database operations in retry for connection errors
+  let data, error;
+  try {
+    if (existing?.id) {
+      // Update existing record with retry and version check
+      const result = await retryWithBackoff(async () => {
+        const dbResult = await supabase
+          .from("preferences")
+          .update(dataToSave)
+          .eq("user_id", userId)
+          .eq("version", existing.version || 0) // Optimistic locking: only update if version matches
+          .select()
+          .single();
+        // Only throw connection errors for retry, not business logic errors
+        if (dbResult.error && (dbResult.error.message?.toLowerCase().includes("fetch") || 
+            dbResult.error.message?.toLowerCase().includes("network") ||
+            dbResult.error.message?.toLowerCase().includes("connection") ||
+            dbResult.error.message?.toLowerCase().includes("timeout"))) {
+          throw dbResult.error;
+        }
+        return dbResult;
+      });
+      data = result.data;
+      error = result.error;
       
-    // If insert fails with conflict (409), try update instead
-    if (error && (error.code === '23505' || error.message?.includes('duplicate') || error.message?.includes('conflict'))) {
-      console.log("Insert conflict detected, trying update instead...");
-      ({ data, error } = await supabase
-        .from("preferences")
-        .update(dataToSave)
-        .eq("user_id", userId)
-        .select()
-        .single());
+      // Check if update failed due to version mismatch (no rows updated)
+      if (error === null && !data) {
+        // No rows updated means version mismatch
+        throw new Error("This record was modified by another user. Please refresh and try again.");
+      }
+    } else {
+      // Try to insert, but if it fails due to conflict, update instead
+      const result = await retryWithBackoff(async () => {
+        const dbResult = await supabase
+          .from("preferences")
+          .insert(dataToSave)
+          .select()
+          .single();
+        // Only throw connection errors for retry, not business logic errors
+        if (dbResult.error && (dbResult.error.message?.toLowerCase().includes("fetch") || 
+            dbResult.error.message?.toLowerCase().includes("network") ||
+            dbResult.error.message?.toLowerCase().includes("connection") ||
+            dbResult.error.message?.toLowerCase().includes("timeout"))) {
+          throw dbResult.error;
+        }
+        return dbResult;
+      });
+      data = result.data;
+      error = result.error;
+        
+      // If insert fails with conflict (409), try update instead
+      if (error && (error.code === '23505' || error.message?.includes('duplicate') || error.message?.includes('conflict'))) {
+        console.log("Insert conflict detected, trying update instead...");
+        const updateResult = await retryWithBackoff(async () => {
+          const dbResult = await supabase
+            .from("preferences")
+            .update(dataToSave)
+            .eq("user_id", userId)
+            .select()
+            .single();
+          // Only throw connection errors for retry
+          if (dbResult.error && (dbResult.error.message?.toLowerCase().includes("fetch") || 
+              dbResult.error.message?.toLowerCase().includes("network") ||
+              dbResult.error.message?.toLowerCase().includes("connection") ||
+              dbResult.error.message?.toLowerCase().includes("timeout"))) {
+            throw dbResult.error;
+          }
+          return dbResult;
+        });
+        data = updateResult.data;
+        error = updateResult.error;
+      }
     }
+  } catch (retryError) {
+    // If retry exhausted for connection errors, treat as error
+    error = retryError as any;
+    data = null;
   }
 
   if (error) {
@@ -217,7 +295,7 @@ export async function saveUserPreferences(preferences: Partial<Preferences>): Pr
     console.error("User ID:", userId);
     console.error("Existing record:", existing ? "Yes (ID: " + existing.id + ")" : "No");
     
-    // If it's a conflict error, try one more time with update
+    // If it's a conflict error, try one more time with update (not connection error)
     if ((error.code === '23505' || error.message?.includes('duplicate') || error.message?.includes('conflict')) && !existing?.id) {
       console.log("Retrying with update after conflict...");
       const retryResult = await supabase
@@ -364,10 +442,32 @@ export async function createFamilyMember(
     return null;
   }
 
+  // Check if user is trying to add themselves
+  const currentUser = await getCurrentUser();
+  if (currentUser?.email && currentUser.email.toLowerCase() === memberData.email.toLowerCase()) {
+    console.error("Cannot add yourself as a family member");
+    throw new Error("You cannot add yourself as a family member");
+  }
+
+  // Check for duplicate email in family members
+  const supabase = await createClient();
+  const { data: existingMembers, error: checkError } = await supabase
+    .from("family_members")
+    .select("id, email")
+    .eq("preferences_id", preferencesId)
+    .ilike("email", memberData.email);
+
+  if (checkError) {
+    console.error("Error checking for duplicate email:", checkError);
+    // Continue anyway, let database constraint handle it
+  } else if (existingMembers && existingMembers.length > 0) {
+    console.error("Email already exists in family members");
+    throw new Error(`A family member with email ${memberData.email} already exists`);
+  }
+
   // Generate unique sharing token
   const sharingToken = generateSharingToken();
 
-  const supabase = await createClient();
   const { data, error } = await supabase
     .from("family_members")
     .insert({
@@ -382,8 +482,13 @@ export async function createFamilyMember(
     .single();
 
   if (error) {
+    // Check for duplicate key error (PostgreSQL unique constraint)
+    if (error.code === '23505' || error.message?.includes('duplicate') || error.message?.includes('unique')) {
+      console.error("Duplicate email detected:", error);
+      throw new Error(`A family member with email ${memberData.email} already exists`);
+    }
     console.error("Error creating family member:", error);
-    return null;
+    throw new Error(error.message || "Failed to create family member");
   }
 
   // Log activity

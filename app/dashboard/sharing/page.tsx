@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -58,37 +58,12 @@ export default function SharingPage() {
     loadPreferenceId();
   }, []);
 
-  const loadShareableLinks = useCallback(async () => {
-    try {
-      const response = await fetch("/api/shareable-link");
-      if (response.ok) {
-        const data = await response.json();
-        setShareableLinks(data.links || []);
-      }
-    } catch (error) {
-      console.error("Error loading shareable links:", error);
-    }
-  }, []);
-
-  const loadFamilyMembers = useCallback(async () => {
-    if (!preferenceId) return;
-    try {
-      const response = await fetch(`/api/family/members/${preferenceId}`);
-      if (response.ok) {
-        const data = await response.json();
-        setFamilyMembers(data.members || []);
-      }
-    } catch (error) {
-      console.error("Error loading family members:", error);
-    }
-  }, [preferenceId]);
-
   useEffect(() => {
     if (preferenceId) {
       loadShareableLinks();
       loadFamilyMembers();
     }
-  }, [preferenceId, loadShareableLinks, loadFamilyMembers]);
+  }, [preferenceId]);
 
   const loadPreferenceId = async () => {
     try {
@@ -104,7 +79,30 @@ export default function SharingPage() {
     }
   };
 
-  // loadShareableLinks and loadFamilyMembers moved above to useCallback
+  const loadShareableLinks = async () => {
+    try {
+      const response = await fetch("/api/shareable-link");
+      if (response.ok) {
+        const data = await response.json();
+        setShareableLinks(data.links || []);
+      }
+    } catch (error) {
+      console.error("Error loading shareable links:", error);
+    }
+  };
+
+  const loadFamilyMembers = async () => {
+    if (!preferenceId) return;
+    try {
+      const response = await fetch(`/api/family/members/${preferenceId}`);
+      if (response.ok) {
+        const data = await response.json();
+        setFamilyMembers(data.members || []);
+      }
+    } catch (error) {
+      console.error("Error loading family members:", error);
+    }
+  };
 
   const createShareableLink = async () => {
     if (!preferenceId) {

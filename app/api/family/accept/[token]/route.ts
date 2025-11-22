@@ -1,39 +1,8 @@
-import { promises as fs } from "fs";
-import path from "path";
 import { NextRequest, NextResponse } from "next/server";
+import { getFamilyMemberByToken, updateFamilyMember } from "@/lib/api";
+import { handleApiError, handleBadRequestError, handleNotFoundError } from "@/lib/api-error-handler";
 
 export const dynamic = 'force-dynamic';
-
-const DATA_DIR = path.join(process.cwd(), "data");
-const FAMILY_MEMBERS_FILE = path.join(DATA_DIR, "family_members.json");
-
-async function ensureDataDir() {
-  try {
-    await fs.mkdir(DATA_DIR, { recursive: true });
-  } catch (error) {
-    // Directory might already exist
-  }
-}
-
-async function readFamilyMembers() {
-  await ensureDataDir();
-  try {
-    const data = await fs.readFile(FAMILY_MEMBERS_FILE, "utf-8");
-    return JSON.parse(data);
-  } catch (error) {
-    return [];
-  }
-}
-
-async function writeFamilyMembers(data: any[]) {
-  try {
-    await ensureDataDir();
-    await fs.writeFile(FAMILY_MEMBERS_FILE, JSON.stringify(data, null, 2), "utf-8");
-  } catch (error) {
-    // Ignore file write errors (filesystem not available on Vercel)
-    console.warn("File write failed (expected on Vercel):", error);
-  }
-}
 
 // POST /api/family/accept/:token - Accept sharing invitation
 export async function POST(
@@ -43,28 +12,35 @@ export async function POST(
   try {
     const { token } = await params;
 
-    const familyMembers = await readFamilyMembers();
-    const member = familyMembers.find((m: any) => m.sharing_link_token === token);
+    if (!token || token.trim().length === 0) {
+      return handleBadRequestError("Token is required");
+    }
+
+    // Get family member by token
+    const member = await getFamilyMemberByToken(token);
 
     if (!member) {
-      return NextResponse.json({ error: "Invitation not found" }, { status: 404 });
+      return handleNotFoundError("Invitation not found");
     }
 
     if (member.accepted_at) {
-      return NextResponse.json({ error: "Invitation already accepted" }, { status: 400 });
+      return handleBadRequestError("Invitation already accepted");
     }
 
     // Update member to accepted
-    member.accepted_at = new Date().toISOString();
-    await writeFamilyMembers(familyMembers);
+    const updatedMember = await updateFamilyMember(member.id!, {
+      accepted_at: new Date().toISOString(),
+    });
+
+    if (!updatedMember) {
+      return handleApiError(new Error("Failed to update member"), "Failed to accept invitation");
+    }
 
     return NextResponse.json({
       success: true,
-      member,
+      member: updatedMember,
     });
   } catch (error) {
-    console.error("Error accepting invitation:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return handleApiError(error, "Failed to accept invitation");
   }
 }
-

@@ -37,12 +37,20 @@ next-env.d.ts
 
 # local data files
 /data
+/data/*.json
 
 # backup/old files
 **/*-old.tsx
 **/*-old.ts
 **/*.backup
 **/*.bak
+
+# test coverage
+coverage/
+.nyc_output/
+
+# jest
+.jest-cache/
 
 # PDF files in docs (reference materials)
 docs/*.pdf
@@ -61,3 +69,4 @@ MemoryK/
 .DS_Store
 Thumbs.db
 
+MemoryKeeper/

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -26,13 +26,17 @@ export default function NotificationsPage() {
   const [filter, setFilter] = useState<"all" | "unread" | "read">("all");
   const [loading, setLoading] = useState(true);
 
-  const loadNotifications = useCallback(async () => {
+  useEffect(() => {
+    loadNotifications();
+  }, []);
+
+  const loadNotifications = async () => {
     try {
       // Mock notifications data
       const mockNotifications: Notification[] = [
         {
           id: "1",
-          user_id: user?.id || "temp-user",
+          user_id: user?.id || "",
           type: "annual_reminder",
           message: "It's been a while since you added memories. Want to capture more of their story?",
           sent_at: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
@@ -77,11 +81,7 @@ export default function NotificationsPage() {
     } finally {
       setLoading(false);
     }
-  }, [user?.id]);
-
-  useEffect(() => {
-    loadNotifications();
-  }, [loadNotifications]);
+  };
 
   const markAsRead = (id: string) => {
     setNotifications(prev => 

@@ -1,130 +1,134 @@
-import { promises as fs } from "fs";
-import path from "path";
 import { NextRequest, NextResponse } from "next/server";
-import { createShareableLink, isLinkValid, extendShareableLink, generateShareableURL, getExpirationMessage } from "@/lib/shareable-links";
+import {
+  getShareableLinks,
+  createShareableLink,
+  extendShareableLink,
+  deactivateShareableLink,
+  getCurrentUserId,
+} from "@/lib/api";
+import { generateShareableURL, getExpirationMessage, isLinkValid } from "@/lib/shareable-links";
+import { shareableLinkSchema, validateData } from "@/lib/validation";
+import { handleApiError, handleUnauthorizedError, handleBadRequestError, parseJsonBody } from "@/lib/api-error-handler";
 
 export const dynamic = 'force-dynamic';
-
-const DATA_DIR = path.join(process.cwd(), "data");
-const SHAREABLE_LINKS_FILE = path.join(DATA_DIR, "shareable_links.json");
-
-// Ensure data directory exists
-async function ensureDataDir() {
-  try {
-    await fs.mkdir(DATA_DIR, { recursive: true });
-  } catch (error) {
-    // Directory might already exist
-  }
-}
-
-// Read shareable links from file
-async function readShareableLinks() {
-  await ensureDataDir();
-  try {
-    const data = await fs.readFile(SHAREABLE_LINKS_FILE, "utf-8");
-    return JSON.parse(data);
-  } catch (error) {
-    return [];
-  }
-}
-
-// Write shareable links to file
-async function writeShareableLinks(data: any[]) {
-  try {
-    await ensureDataDir();
-    await fs.writeFile(SHAREABLE_LINKS_FILE, JSON.stringify(data, null, 2), "utf-8");
-  } catch (error) {
-    // Ignore file write errors (filesystem not available on Vercel)
-    console.warn("File write failed (expected on Vercel):", error);
-  }
-}
 
 // GET /api/shareable-link - Get all shareable links for user
 export async function GET(request: NextRequest) {
   try {
-    const userId = "temp-user"; // Temporary mock user ID
+    const userId = await getCurrentUserId();
+    if (!userId) {
+      return handleUnauthorizedError();
+    }
 
-    const links = await readShareableLinks();
-    const userLinks = links
-      .filter((link: any) => link.user_id === userId)
-      .map((link: any) => ({
-        ...link,
-        shareUrl: generateShareableURL(link.link_token),
-        isValid: isLinkValid(link),
-        daysRemaining: getExpirationMessage(link),
-      }));
+    const { searchParams } = new URL(request.url);
+    const preferencesIdParam = searchParams.get("preferencesId");
+    const preferencesId = preferencesIdParam ? preferencesIdParam : undefined;
 
-    return NextResponse.json({ links: userLinks });
+    const links = await getShareableLinks(preferencesId);
+
+    // Add computed fields for frontend
+    const linksWithMetadata = links.map((link) => ({
+      ...link,
+      shareUrl: generateShareableURL(link.link_token),
+      isValid: isLinkValid(link as any),
+      daysRemaining: getExpirationMessage(link as any),
+    }));
+
+    return NextResponse.json({ links: linksWithMetadata });
   } catch (error) {
-    console.error("Error fetching shareable links:", error);
-    return NextResponse.json({ error: "Failed to fetch shareable links" }, { status: 500 });
+    return handleApiError(error, "Failed to fetch shareable links");
   }
 }
 
 // POST /api/shareable-link - Create a new shareable link
 export async function POST(request: NextRequest) {
   try {
-    const userId = "temp-user"; // Temporary mock user ID
+    const userId = await getCurrentUserId();
+    if (!userId) {
+      return handleUnauthorizedError();
+    }
 
-    const links = await readShareableLinks();
-    const newLink = createShareableLink(userId);
+    const bodyResult = await parseJsonBody(request);
+    if (!bodyResult.success) {
+      return bodyResult.response;
+    }
+
+    const body = bodyResult.data;
     
-    links.push(newLink);
-    await writeShareableLinks(links);
+    // Validate input
+    const validation = validateData(shareableLinkSchema, body);
+    if (!validation.success) {
+      return handleBadRequestError("Validation failed", validation.errors);
+    }
+
+    const { preferencesId, expirationDays } = validation.data;
+
+    const newLink = await createShareableLink(preferencesId, expirationDays || 30);
+
+    if (!newLink) {
+      return NextResponse.json({ error: "Failed to create shareable link" }, { status: 500 });
+    }
 
     return NextResponse.json({
       success: true,
       link: {
         ...newLink,
         shareUrl: generateShareableURL(newLink.link_token),
-        daysRemaining: getExpirationMessage(newLink),
+        daysRemaining: getExpirationMessage(newLink as any),
       },
     });
   } catch (error) {
-    console.error("Error creating shareable link:", error);
-    return NextResponse.json({ error: "Failed to create shareable link" }, { status: 500 });
+    return handleApiError(error, "Failed to create shareable link");
   }
 }
 
 // PATCH /api/shareable-link - Extend or deactivate a shareable link
 export async function PATCH(request: NextRequest) {
   try {
-    const userId = "temp-user"; // Temporary mock user ID
+    const userId = await getCurrentUserId();
+    if (!userId) {
+      return handleUnauthorizedError();
+    }
 
-    const { linkId, action } = await request.json();
+    const bodyResult = await parseJsonBody<{ linkId?: string; action?: string; days?: number }>(request);
+    if (!bodyResult.success) {
+      return bodyResult.response;
+    }
+
+    const { linkId, action, days } = bodyResult.data;
 
     if (!linkId || !action) {
-      return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
+      return handleBadRequestError("Missing required fields: linkId and action are required");
     }
 
-    const links = await readShareableLinks();
-    const linkIndex = links.findIndex((link: any) => link.id === linkId && link.user_id === userId);
-
-    if (linkIndex === -1) {
-      return NextResponse.json({ error: "Link not found" }, { status: 404 });
-    }
-
+    let updatedLink;
     if (action === "extend") {
-      links[linkIndex] = extendShareableLink(links[linkIndex]);
+      updatedLink = await extendShareableLink(linkId, days || 30);
     } else if (action === "deactivate") {
-      links[linkIndex].is_active = false;
+      const success = await deactivateShareableLink(linkId);
+      if (!success) {
+        return NextResponse.json({ error: "Failed to deactivate link" }, { status: 500 });
+      }
+      // Fetch the updated link
+      const links = await getShareableLinks();
+      updatedLink = links.find((link) => link.id === linkId);
     } else {
       return NextResponse.json({ error: "Invalid action" }, { status: 400 });
     }
 
-    await writeShareableLinks(links);
+    if (!updatedLink) {
+      return NextResponse.json({ error: "Link not found" }, { status: 404 });
+    }
 
     return NextResponse.json({
       success: true,
       link: {
-        ...links[linkIndex],
-        shareUrl: generateShareableURL(links[linkIndex].link_token),
-        daysRemaining: getExpirationMessage(links[linkIndex]),
+        ...updatedLink,
+        shareUrl: generateShareableURL(updatedLink.link_token),
+        daysRemaining: getExpirationMessage(updatedLink as any),
       },
     });
   } catch (error) {
-    console.error("Error updating shareable link:", error);
-    return NextResponse.json({ error: "Failed to update shareable link" }, { status: 500 });
+    return handleApiError(error, "Failed to update shareable link");
   }
 }
-

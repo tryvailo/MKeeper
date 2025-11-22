@@ -91,3 +91,40 @@ export function getUserFriendlyError(error: any): string {
   return formatted.message || "An error occurred. Please try again.";
 }
 
+/**
+ * Retry a function with exponential backoff for connection errors
+ * @param fn Function to retry
+ * @param maxRetries Maximum number of retries (default: 3)
+ * @param initialDelay Initial delay in milliseconds (default: 1000)
+ * @returns Result of the function or throws error after all retries
+ */
+export async function retryWithBackoff<T>(
+  fn: () => Promise<T>,
+  maxRetries: number = 3,
+  initialDelay: number = 1000
+): Promise<T> {
+  let lastError: any;
+  
+  for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    try {
+      return await fn();
+    } catch (error) {
+      lastError = error;
+      
+      // Only retry connection errors
+      if (!isConnectionError(error) || attempt === maxRetries) {
+        throw error;
+      }
+      
+      // Calculate exponential backoff delay
+      const delay = initialDelay * Math.pow(2, attempt);
+      console.warn(`Connection error, retrying in ${delay}ms (attempt ${attempt + 1}/${maxRetries})`);
+      
+      // Wait before retry
+      await new Promise(resolve => setTimeout(resolve, delay));
+    }
+  }
+  
+  throw lastError;
+}
+

@@ -19,7 +19,19 @@ The captured story can be shared with family members, exported as PDF, and acces
 - **Backend:** Supabase (PostgreSQL)
 - **Authentication:** Clerk
 - **PDF Generation:** jsPDF
+- **Testing:** Jest, React Testing Library
+- **Validation:** Zod
 - **Deployment:** Vercel (recommended)
+
+## Features
+
+- ✅ **Complete Supabase Integration** - All data stored in PostgreSQL
+- ✅ **Comprehensive Error Handling** - User-friendly error messages
+- ✅ **Input Validation** - Zod schemas for all API endpoints
+- ✅ **Unit Tests** - 43 tests covering error handling and validation
+- ✅ **Type Safety** - Full TypeScript coverage
+- ✅ **Production Ready** - Vercel deployment compatible
+- ✅ **CI/CD** - GitHub Actions workflows included
 
 ## Quick Start
 
@@ -43,6 +55,9 @@ Required environment variables:
 - `NEXT_PUBLIC_SUPABASE_URL` - Supabase project URL
 - `NEXT_PUBLIC_SUPABASE_ANON_KEY` - Supabase anonymous key
 - `NEXT_PUBLIC_APP_URL` - Your app URL (http://localhost:3000 for local)
+- `RESEND_API_KEY` - Resend API key for email sending (optional)
+
+See `.env.example` for all available variables.
 
 ### 3. Supabase Setup
 
@@ -145,6 +160,19 @@ Total: 32 questions, ~35-40 minutes
 ```bash
 npm run build
 npm start
+```
+
+### Testing
+
+```bash
+# Run all tests
+npm test
+
+# Run tests in watch mode
+npm run test:watch
+
+# Run tests with coverage
+npm run test:coverage
 ```
 
 ### Linting
