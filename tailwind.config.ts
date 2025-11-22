@@ -18,6 +18,7 @@ const config: Config = {
           "blue-darker": "#1E3A8A", // Even darker for active
           green: "#10B981", // Soft green for success/positive
           "green-dark": "#059669", // Darker green for hover
+          dark: "#111827", // Brand dark for headings
         },
         text: {
           primary: "#111827", // Black for headings

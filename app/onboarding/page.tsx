@@ -39,18 +39,7 @@ export default function OnboardingPage() {
   const [stepStartTime, setStepStartTime] = useState(Date.now());
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
   const [elapsedTime, setElapsedTime] = useState(0);
-
-  useEffect(() => {
-    if (authLoading) return;
-    
-    if (!user) {
-      router.push("/sign-in");
-      return;
-    }
-
-    // Load existing interview data when user returns to onboarding
-    loadExistingData();
-  }, [user, authLoading, router, loadExistingData, loadFromLocalStorage, saveToLocalStorage]);
+  const [hasExistingData, setHasExistingData] = useState(false);
 
   // Save to localStorage as fallback
   const saveToLocalStorage = useCallback((data: Record<string, string>) => {
@@ -96,6 +85,7 @@ export default function OnboardingPage() {
     if (localData && Object.keys(localData).length > 0) {
       console.log("OnboardingPage: Loaded from localStorage:", Object.keys(localData).length, "fields");
       setFormData(localData);
+      setHasExistingData(true);
     }
     
     // Then, try to load from server (most up-to-date)
@@ -111,6 +101,7 @@ export default function OnboardingPage() {
         if (data.preferences?.interview_data) {
           console.log("OnboardingPage: Setting formData from existing interview_data");
           setFormData(data.preferences.interview_data);
+          setHasExistingData(true);
           // Update localStorage with server data
           saveToLocalStorage(data.preferences.interview_data);
         } else {
@@ -127,6 +118,18 @@ export default function OnboardingPage() {
       // If server fails, we already have localStorage data loaded above
     }
   }, [user?.id, loadFromLocalStorage, saveToLocalStorage]);
+
+  useEffect(() => {
+    if (authLoading) return;
+    
+    if (!user) {
+      router.push("/sign-in");
+      return;
+    }
+
+    // Load existing interview data when user returns to onboarding
+    loadExistingData();
+  }, [user, authLoading, router, loadExistingData]);
 
   // Timer effect
   useEffect(() => {
@@ -577,11 +580,11 @@ export default function OnboardingPage() {
         <div className="bg-white shadow rounded-lg p-8">
           <div className="mb-6">
             <Link
-              href="/"
+              href={hasExistingData ? "/dashboard" : "/"}
               className="inline-flex items-center gap-2 text-gray-600 hover:text-gray-900 mb-4 transition-colors"
             >
               <ArrowLeft className="h-4 w-4" />
-              <span className="text-sm">Back to Home</span>
+              <span className="text-sm">Back to {hasExistingData ? "Dashboard" : "Home"}</span>
             </Link>
           </div>
           <h1 className="text-3xl font-bold text-gray-900 mb-2">
