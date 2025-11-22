@@ -267,7 +267,8 @@ export default function DashboardPage() {
                     <p className="text-sm text-gray-500 mt-1">Securely stored in the UK</p>
                   </div>
                   {(() => {
-                    const stats = preferences ? calculateInterviewStats(preferences) : null;
+                    const interviewData = preferences ? getInterviewDataFromPreferences(preferences) : null;
+                    const stats = interviewData ? calculateInterviewStats(interviewData) : null;
                     const hasContent = stats && stats.answeredQuestions > 0;
                     return (
                       <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
@@ -279,7 +280,8 @@ export default function DashboardPage() {
               </CardHeader>
               <CardContent>
                 {(() => {
-                  const stats = preferences ? calculateInterviewStats(preferences) : null;
+                  const interviewData = preferences ? getInterviewDataFromPreferences(preferences) : null;
+                  const stats = interviewData ? calculateInterviewStats(interviewData) : null;
                   const hasContent = stats && stats.answeredQuestions > 0;
                   
                   return (

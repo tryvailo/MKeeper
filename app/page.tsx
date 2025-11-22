@@ -22,7 +22,8 @@ import {
   ChevronRight,
   Quote,
   MessageCircleHeart,
-  ArrowRight
+  ArrowRight,
+  ShieldCheck
 } from "lucide-react";
 import { MemoryKeeperLogo } from "@/components/icons";
 
@@ -541,19 +542,27 @@ export default function LandingPage() {
       {/* Free Section - Replaces Pricing */}
       <section className="bg-gradient-to-b from-white to-gray-50 py-24 md:py-32">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <div className="flex justify-center mb-8">
-            <div className="p-6 rounded-full bg-brand-green/10">
-              <CheckCircle2 className="h-20 w-20 text-brand-green" strokeWidth={2} />
-            </div>
+          <div className="inline-flex items-center justify-center p-6 bg-brand-green/10 rounded-full mb-8">
+            <CheckCircle2 className="text-brand-green w-20 h-20" strokeWidth={1.5} />
           </div>
-          <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6">This is always free. Always will be.</h2>
-          <p className="text-xl text-gray-600 mb-10 max-w-2xl mx-auto leading-relaxed">
-            Legacy Words is completely free for dementia families. No payment ever. No hidden fees. No catches.
+          
+          <h2 className="text-4xl md:text-5xl font-bold text-brand-dark mb-6">
+            Basic features are free forever.
+          </h2>
+          
+          <p className="text-xl text-gray-600 leading-relaxed mb-8 max-w-2xl mx-auto">
+            Every family deserves to preserve their history. The core memory recording tools are completely free for dementia families.
           </p>
+          
+          <div className="flex items-center justify-center space-x-2 mb-10 text-sm text-gray-500 bg-white inline-block px-4 py-2 rounded-full border border-gray-200 shadow-sm">
+            <ShieldCheck size={16} className="text-gray-400" />
+            <span>We do not sell your data. Your privacy is our priority.</span>
+          </div>
+
           <Link href="/sign-up">
-            <Button size="lg" className="text-lg px-10 py-7 h-auto shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105">
+            <button className="bg-brand-blue text-white text-lg md:text-xl font-bold px-12 py-6 rounded-full shadow-xl hover:bg-blue-800 hover:shadow-2xl transition-all transform hover:-translate-y-1">
               Start Remembering
-            </Button>
+            </button>
           </Link>
         </div>
       </section>
