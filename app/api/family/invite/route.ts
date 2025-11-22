@@ -6,7 +6,7 @@ import {
   getCurrentUser,
 } from "@/lib/api";
 import { sendShareInviteEmail } from "@/lib/email";
-import { supabase } from "@/lib/supabase";
+import { createClient } from "@/lib/supabase/server";
 import { familyMemberSchema, validateData } from "@/lib/validation";
 import { getUserFriendlyError, isConnectionError } from "@/lib/supabase-error-handler";
 
@@ -72,6 +72,7 @@ export async function POST(request: NextRequest) {
 
     // Create shared access record (legacy support)
     try {
+      const supabase = await createClient();
       await supabase.from("shared_access").insert({
         preference_id: preferenceId,
         shared_with_email: email,

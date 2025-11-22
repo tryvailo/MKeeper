@@ -1,43 +1,9 @@
-import { promises as fs } from "fs";
-import path from "path";
 import { NextRequest, NextResponse } from "next/server";
+import { getFamilyMemberByToken, getUserPreferences } from "@/lib/api";
+import { createClient } from "@/lib/supabase/server";
+import { handleApiError, handleBadRequestError, handleNotFoundError } from "@/lib/api-error-handler";
 
 export const dynamic = 'force-dynamic';
-
-const DATA_DIR = path.join(process.cwd(), "data");
-const PREFERENCES_FILE = path.join(DATA_DIR, "preferences.json");
-const SHARED_ACCESS_FILE = path.join(DATA_DIR, "shared_access.json");
-
-// Ensure data directory exists
-async function ensureDataDir() {
-  try {
-    await fs.mkdir(DATA_DIR, { recursive: true });
-  } catch (error) {
-    // Directory might already exist
-  }
-}
-
-// Read preferences from file
-async function readPreferences() {
-  await ensureDataDir();
-  try {
-    const data = await fs.readFile(PREFERENCES_FILE, "utf-8");
-    return JSON.parse(data);
-  } catch (error) {
-    return {};
-  }
-}
-
-// Read shared access from file
-async function readSharedAccess() {
-  await ensureDataDir();
-  try {
-    const data = await fs.readFile(SHARED_ACCESS_FILE, "utf-8");
-    return JSON.parse(data);
-  } catch (error) {
-    return [];
-  }
-}
 
 export async function GET(
   request: NextRequest,
@@ -46,39 +12,52 @@ export async function GET(
   try {
     const { token } = await params;
 
-    // Get shared_access record
-    const sharedAccessList = await readSharedAccess();
-    const sharedAccess = sharedAccessList.find(
-      (item: any) => item.access_token === token
-    );
+    if (!token || token.trim().length === 0) {
+      return handleBadRequestError("Token is required");
+    }
 
-    if (!sharedAccess) {
-      return NextResponse.json(
-        { error: "Access not found or expired" },
-        { status: 404 }
-      );
+    // Try to get family member by token first
+    let familyMember = await getFamilyMemberByToken(token);
+
+    if (familyMember) {
+      // Get preferences for this family member
+      const preferences = await getUserPreferences(familyMember.preferences_id);
+
+      if (!preferences) {
+        return handleNotFoundError("Preferences not found");
+      }
+
+      return NextResponse.json({
+        preferences,
+        familyMember,
+      });
+    }
+
+    // Fallback: try shared_access table (legacy support)
+    const supabase = await createClient();
+    const { data: sharedAccess, error: sharedError } = await supabase
+      .from("shared_access")
+      .select("preference_id")
+      .eq("access_token", token)
+      .single();
+
+    if (sharedError || !sharedAccess) {
+      return handleNotFoundError("Access not found or expired");
     }
 
     // Get preferences
-    const preferences = await readPreferences();
-    const userPreferences = Object.values(preferences).find(
-      (pref: any) => pref.id === sharedAccess.preference_id
-    );
+    const { data: preferences, error: prefError } = await supabase
+      .from("preferences")
+      .select("*")
+      .eq("id", sharedAccess.preference_id)
+      .single();
 
-    if (!userPreferences) {
-      return NextResponse.json(
-        { error: "Preferences not found" },
-        { status: 404 }
-      );
+    if (prefError || !preferences) {
+      return handleNotFoundError("Preferences not found");
     }
 
-    return NextResponse.json({ preferences: userPreferences });
+    return NextResponse.json({ preferences });
   } catch (error) {
-    console.error("Error fetching shared preferences:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
+    return handleApiError(error, "Failed to fetch shared preferences");
   }
 }
-

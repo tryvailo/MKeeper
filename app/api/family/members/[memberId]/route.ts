@@ -1,37 +1,55 @@
-import { promises as fs } from "fs";
-import path from "path";
 import { NextRequest, NextResponse } from "next/server";
+import {
+  getFamilyMembers,
+  updateFamilyMember,
+  deleteFamilyMember,
+  getCurrentUserId,
+  getUserPreferences,
+} from "@/lib/api";
+import { createClient } from "@/lib/supabase/server";
+import { handleApiError, handleUnauthorizedError, handleNotFoundError, handleBadRequestError, parseJsonBody } from "@/lib/api-error-handler";
+import { familyMemberSchema, validateData } from "@/lib/validation";
 
 export const dynamic = 'force-dynamic';
 
-const DATA_DIR = path.join(process.cwd(), "data");
-const FAMILY_MEMBERS_FILE = path.join(DATA_DIR, "family_members.json");
-
-async function ensureDataDir() {
+// GET /api/family/members/:memberId - Get a specific family member
+export async function GET(
+  request: NextRequest,
+  { params }: { params: Promise<{ memberId: string }> }
+) {
   try {
-    await fs.mkdir(DATA_DIR, { recursive: true });
-  } catch (error) {
-    // Directory might already exist
-  }
-}
+    const userId = await getCurrentUserId();
+    if (!userId) {
+      return handleUnauthorizedError();
+    }
 
-async function readFamilyMembers() {
-  await ensureDataDir();
-  try {
-    const data = await fs.readFile(FAMILY_MEMBERS_FILE, "utf-8");
-    return JSON.parse(data);
-  } catch (error) {
-    return [];
-  }
-}
+    const { memberId } = await params;
 
-async function writeFamilyMembers(data: any[]) {
-  try {
-    await ensureDataDir();
-    await fs.writeFile(FAMILY_MEMBERS_FILE, JSON.stringify(data, null, 2), "utf-8");
+    if (!memberId || memberId.trim().length === 0) {
+      return handleBadRequestError("Member ID is required");
+    }
+
+    // Get member from database
+    const supabase = await createClient();
+    const { data: member, error } = await supabase
+      .from("family_members")
+      .select("*")
+      .eq("id", memberId)
+      .single();
+
+    if (error || !member) {
+      return handleNotFoundError("Member not found");
+    }
+
+    // Verify user owns the preferences
+    const preferences = await getUserPreferences(userId);
+    if (!preferences || preferences.id !== member.preferences_id) {
+      return handleUnauthorizedError("You don't have permission to access this member");
+    }
+
+    return NextResponse.json({ member });
   } catch (error) {
-    // Ignore file write errors (filesystem not available on Vercel)
-    console.warn("File write failed (expected on Vercel):", error);
+    return handleApiError(error, "Failed to fetch member");
   }
 }
 
@@ -41,35 +59,97 @@ export async function PUT(
   { params }: { params: Promise<{ memberId: string }> }
 ) {
   try {
-    const userId = "temp-user"; // Temporary mock user ID
+    const userId = await getCurrentUserId();
+    if (!userId) {
+      return handleUnauthorizedError();
+    }
 
     const { memberId } = await params;
-    const { accessLevel, relationship } = await request.json();
 
-    const familyMembers = await readFamilyMembers();
-    const memberIndex = familyMembers.findIndex((m: any) => m.id === memberId);
-
-    if (memberIndex === -1) {
-      return NextResponse.json({ error: "Member not found" }, { status: 404 });
+    if (!memberId || memberId.trim().length === 0) {
+      return handleBadRequestError("Member ID is required");
     }
 
-    // Update member
+    const bodyResult = await parseJsonBody<{ accessLevel?: string; relationship?: string }>(request);
+    if (!bodyResult.success) {
+      return bodyResult.response;
+    }
+
+    const { accessLevel, relationship } = bodyResult.data;
+
+    // Validate updates if provided
+    if (relationship) {
+      const relationshipValidation = validateData(
+        familyMemberSchema.pick({ relationship: true }),
+        { relationship }
+      );
+      if (!relationshipValidation.success) {
+        return handleBadRequestError("Invalid relationship value", relationshipValidation.errors);
+      }
+    }
+
     if (accessLevel) {
-      familyMembers[memberIndex].access_level = accessLevel;
+      const accessLevelValidation = validateData(
+        familyMemberSchema.pick({ access_level: true }),
+        { access_level: accessLevel }
+      );
+      if (!accessLevelValidation.success) {
+        return handleBadRequestError("Invalid access level", accessLevelValidation.errors);
+      }
+    }
+
+    const updates: any = {};
+    if (accessLevel) {
+      updates.access_level = accessLevel;
     }
     if (relationship) {
-      familyMembers[memberIndex].relationship = relationship;
+      updates.relationship = relationship;
     }
 
-    await writeFamilyMembers(familyMembers);
+    if (Object.keys(updates).length === 0) {
+      return handleBadRequestError("No fields to update");
+    }
+
+    const updatedMember = await updateFamilyMember(memberId, updates);
+
+    if (!updatedMember) {
+      return handleNotFoundError("Member not found or update failed");
+    }
 
     return NextResponse.json({
       success: true,
-      member: familyMembers[memberIndex],
+      member: updatedMember,
     });
   } catch (error) {
-    console.error("Error updating member:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return handleApiError(error, "Failed to update member");
   }
 }
 
+// DELETE /api/family/members/:memberId - Delete family member
+export async function DELETE(
+  request: NextRequest,
+  { params }: { params: Promise<{ memberId: string }> }
+) {
+  try {
+    const userId = await getCurrentUserId();
+    if (!userId) {
+      return handleUnauthorizedError();
+    }
+
+    const { memberId } = await params;
+
+    if (!memberId || memberId.trim().length === 0) {
+      return handleBadRequestError("Member ID is required");
+    }
+
+    const success = await deleteFamilyMember(memberId);
+
+    if (!success) {
+      return handleNotFoundError("Member not found or delete failed");
+    }
+
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    return handleApiError(error, "Failed to delete member");
+  }
+}

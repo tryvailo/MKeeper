@@ -1,60 +1,9 @@
-import { promises as fs } from "fs";
-import path from "path";
 import { NextRequest, NextResponse } from "next/server";
+import { deleteFamilyMember, getCurrentUserId } from "@/lib/api";
+import { createClient } from "@/lib/supabase/server";
+import { handleApiError, handleUnauthorizedError, handleNotFoundError, handleBadRequestError } from "@/lib/api-error-handler";
 
 export const dynamic = 'force-dynamic';
-
-const DATA_DIR = path.join(process.cwd(), "data");
-const FAMILY_MEMBERS_FILE = path.join(DATA_DIR, "family_members.json");
-const SHARED_ACCESS_FILE = path.join(DATA_DIR, "shared_access.json");
-
-async function ensureDataDir() {
-  try {
-    await fs.mkdir(DATA_DIR, { recursive: true });
-  } catch (error) {
-    // Directory might already exist
-  }
-}
-
-async function readFamilyMembers() {
-  await ensureDataDir();
-  try {
-    const data = await fs.readFile(FAMILY_MEMBERS_FILE, "utf-8");
-    return JSON.parse(data);
-  } catch (error) {
-    return [];
-  }
-}
-
-async function writeFamilyMembers(data: any[]) {
-  try {
-    await ensureDataDir();
-    await fs.writeFile(FAMILY_MEMBERS_FILE, JSON.stringify(data, null, 2), "utf-8");
-  } catch (error) {
-    // Ignore file write errors (filesystem not available on Vercel)
-    console.warn("File write failed (expected on Vercel):", error);
-  }
-}
-
-async function readSharedAccess() {
-  await ensureDataDir();
-  try {
-    const data = await fs.readFile(SHARED_ACCESS_FILE, "utf-8");
-    return JSON.parse(data);
-  } catch (error) {
-    return [];
-  }
-}
-
-async function writeSharedAccess(data: any[]) {
-  try {
-    await ensureDataDir();
-    await fs.writeFile(SHARED_ACCESS_FILE, JSON.stringify(data, null, 2), "utf-8");
-  } catch (error) {
-    // Ignore file write errors (filesystem not available on Vercel)
-    console.warn("File write failed (expected on Vercel):", error);
-  }
-}
 
 // DELETE /api/family/revoke/:memberId - Revoke access
 export async function DELETE(
@@ -62,35 +11,49 @@ export async function DELETE(
   { params }: { params: Promise<{ memberId: string }> }
 ) {
   try {
-    const userId = "temp-user"; // Temporary mock user ID
+    const userId = await getCurrentUserId();
+    if (!userId) {
+      return handleUnauthorizedError();
+    }
 
     const { memberId } = await params;
 
-    const familyMembers = await readFamilyMembers();
-    const member = familyMembers.find((m: any) => m.id === memberId);
-
-    if (!member) {
-      return NextResponse.json({ error: "Member not found" }, { status: 404 });
+    if (!memberId || memberId.trim().length === 0) {
+      return handleBadRequestError("Member ID is required");
     }
 
-    // Verify user owns the preferences
-    // TODO: Add verification that userId matches preference owner
+    // Get member to find token before deletion
+    const supabase = await createClient();
+    const { data: member, error: fetchError } = await supabase
+      .from("family_members")
+      .select("sharing_link_token")
+      .eq("id", memberId)
+      .single();
 
-    // Remove member
-    const updatedMembers = familyMembers.filter((m: any) => m.id !== memberId);
-    await writeFamilyMembers(updatedMembers);
+    if (fetchError || !member) {
+      return handleNotFoundError("Member not found");
+    }
 
-    // Remove shared access
-    const sharedAccess = await readSharedAccess();
-    const updatedAccess = sharedAccess.filter(
-      (sa: any) => sa.access_token !== member.sharing_link_token
-    );
-    await writeSharedAccess(updatedAccess);
+    // Delete family member (this will also check ownership)
+    const success = await deleteFamilyMember(memberId);
+
+    if (!success) {
+      return handleApiError(new Error("Delete failed"), "Failed to revoke access");
+    }
+
+    // Remove related shared_access records (legacy support)
+    try {
+      await supabase
+        .from("shared_access")
+        .delete()
+        .eq("access_token", member.sharing_link_token);
+    } catch (error) {
+      console.warn("Failed to delete shared_access record:", error);
+      // Continue - this is for legacy support
+    }
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error("Error revoking access:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return handleApiError(error, "Failed to revoke access");
   }
 }
-

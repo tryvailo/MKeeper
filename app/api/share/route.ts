@@ -1,82 +1,77 @@
-import { promises as fs } from "fs";
-import path from "path";
 import { NextRequest, NextResponse } from "next/server";
+import { getCurrentUserId, getUserPreferences } from "@/lib/api";
+import { createClient } from "@/lib/supabase/server";
 import crypto from "crypto";
+import { handleApiError, handleUnauthorizedError, handleNotFoundError, handleBadRequestError, parseJsonBody } from "@/lib/api-error-handler";
+import { z } from "zod";
 
 export const dynamic = 'force-dynamic';
 
-const DATA_DIR = path.join(process.cwd(), "data");
-const SHARED_ACCESS_FILE = path.join(DATA_DIR, "shared_access.json");
-
-// Ensure data directory exists
-async function ensureDataDir() {
-  try {
-    await fs.mkdir(DATA_DIR, { recursive: true });
-  } catch (error) {
-    // Directory might already exist
-  }
-}
-
-// Read shared access from file
-async function readSharedAccess() {
-  await ensureDataDir();
-  try {
-    const data = await fs.readFile(SHARED_ACCESS_FILE, "utf-8");
-    return JSON.parse(data);
-  } catch (error) {
-    return [];
-  }
-}
-
-// Write shared access to file
-async function writeSharedAccess(data: any[]) {
-  try {
-    await ensureDataDir();
-    await fs.writeFile(SHARED_ACCESS_FILE, JSON.stringify(data, null, 2), "utf-8");
-  } catch (error) {
-    // Ignore file write errors (filesystem not available on Vercel)
-    console.warn("File write failed (expected on Vercel):", error);
-  }
-}
+// Schema for share route
+const shareSchema = z.object({
+  preferenceId: z.string().uuid(),
+  email: z.string().email().max(200),
+});
 
 export async function POST(request: NextRequest) {
   try {
-    const userId = "temp-user"; // Temporary mock user ID
+    const userId = await getCurrentUserId();
+    if (!userId) {
+      return handleUnauthorizedError();
+    }
 
-    const { preferenceId, email } = await request.json();
+    const bodyResult = await parseJsonBody(request);
+    if (!bodyResult.success) {
+      return bodyResult.response;
+    }
 
-    if (!preferenceId || !email) {
-      return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
+    // Validate input
+    const validation = shareSchema.safeParse(bodyResult.data);
+    if (!validation.success) {
+      const errors = validation.error.errors.map((err) => {
+        const path = err.path.join(".");
+        return path ? `${path}: ${err.message}` : err.message;
+      });
+      return handleBadRequestError("Validation failed", errors);
+    }
+
+    const { preferenceId, email } = validation.data;
+
+    // Verify user owns the preferences
+    const preferences = await getUserPreferences(userId);
+    if (!preferences || preferences.id !== preferenceId) {
+      return handleNotFoundError("Preferences not found");
     }
 
     // Generate unique access token
     const accessToken = crypto.randomBytes(32).toString("hex");
 
-    // Save to file
-    const sharedAccess = await readSharedAccess();
-    const newAccess = {
-      id: `share_${Date.now()}`,
-      preference_id: preferenceId,
-      shared_with_email: email,
-      access_token: accessToken,
-      created_at: new Date().toISOString(),
-    };
-    sharedAccess.push(newAccess);
-    await writeSharedAccess(sharedAccess);
+    // Create shared_access record
+    const supabase = await createClient();
+    const { data, error } = await supabase
+      .from("shared_access")
+      .insert({
+        preference_id: preferenceId,
+        shared_with_email: email,
+        access_token: accessToken,
+      })
+      .select()
+      .single();
+
+    if (error) {
+      return handleApiError(error, "Failed to create shared access");
+    }
 
     // Generate access link
-    const shareUrl = `${process.env.NEXT_PUBLIC_APP_URL || "https://legacywords.co.uk"}/family/${accessToken}`;
-
-    // TODO: Send email with link (can use Resend, SendGrid, etc.)
-    // For now, just return the link
+    const shareUrl = `${process.env.NEXT_PUBLIC_APP_URL || "https://legacywords.co.uk"}/share/${accessToken}`;
 
     return NextResponse.json({
       success: true,
       shareUrl,
       accessToken,
+      sharedAccess: data,
     });
   } catch (error) {
-    console.error("Error in share API:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return handleApiError(error, "Failed to create share link");
   }
 }

@@ -1,86 +1,44 @@
-import { promises as fs } from "fs";
-import path from "path";
 import { NextRequest, NextResponse } from "next/server";
-import { isLinkValid } from "@/lib/shareable-links";
+import { validateShareableLink, getUserPreferences } from "@/lib/api";
+import { createClient } from "@/lib/supabase/server";
+import { handleApiError, handleBadRequestError, handleNotFoundError } from "@/lib/api-error-handler";
 
 export const dynamic = 'force-dynamic';
-
-const DATA_DIR = path.join(process.cwd(), "data");
-const SHAREABLE_LINKS_FILE = path.join(DATA_DIR, "shareable_links.json");
-const PREFERENCES_FILE = path.join(DATA_DIR, "preferences.json");
-
-// Ensure data directory exists
-async function ensureDataDir() {
-  try {
-    await fs.mkdir(DATA_DIR, { recursive: true });
-  } catch (error) {
-    // Directory might already exist
-  }
-}
-
-// Read shareable links from file
-async function readShareableLinks() {
-  await ensureDataDir();
-  try {
-    const data = await fs.readFile(SHAREABLE_LINKS_FILE, "utf-8");
-    return JSON.parse(data);
-  } catch (error) {
-    return [];
-  }
-}
-
-// Read preferences from file
-async function readPreferences() {
-  await ensureDataDir();
-  try {
-    const data = await fs.readFile(PREFERENCES_FILE, "utf-8");
-    return JSON.parse(data);
-  } catch (error) {
-    return {};
-  }
-}
 
 // GET /api/share/[token] - Get story data via shareable link
 export async function GET(
   request: NextRequest,
-  { params }: { params: { token: string } }
+  { params }: { params: Promise<{ token: string }> }
 ) {
   try {
-    const { token } = params;
+    const { token } = await params;
     
-    if (!token) {
-      return NextResponse.json({ error: "Invalid token" }, { status: 400 });
+    if (!token || token.trim().length === 0) {
+      return handleBadRequestError("Token is required");
     }
 
-    // Find the shareable link
-    const links = await readShareableLinks();
-    const link = links.find((l: any) => l.link_token === token);
+    // Validate and get the shareable link
+    const link = await validateShareableLink(token);
 
     if (!link) {
-      return NextResponse.json({ error: "Link not found" }, { status: 404 });
-    }
-
-    // Check if link is valid (not expired and active)
-    if (!isLinkValid(link)) {
-      return NextResponse.json({ error: "Link expired" }, { status: 410 }); // 410 Gone
+      return handleNotFoundError("Link not found or expired");
     }
 
     // Update access count and last accessed
-    link.access_count = (link.access_count || 0) + 1;
-    link.last_accessed_at = new Date().toISOString();
-    try {
-      await fs.writeFile(SHAREABLE_LINKS_FILE, JSON.stringify(links, null, 2), "utf-8");
-    } catch (error) {
-      // Ignore file write errors (filesystem not available on Vercel)
-      console.warn("File write failed (expected on Vercel):", error);
-    }
+    const supabase = await createClient();
+    await supabase
+      .from("shareable_links")
+      .update({
+        access_count: (link.access_count || 0) + 1,
+        last_accessed_at: new Date().toISOString(),
+      })
+      .eq("id", link.id);
 
     // Get user preferences (interview data)
-    const preferences = await readPreferences();
-    const userPreferences = preferences[link.user_id];
+    const preferences = await getUserPreferences(link.user_id);
 
-    if (!userPreferences) {
-      return NextResponse.json({ error: "Story not found" }, { status: 404 });
+    if (!preferences) {
+      return handleNotFoundError("Story not found");
     }
 
     // Return interview data (only the fields we want to share)
@@ -97,8 +55,8 @@ export async function GET(
     ];
 
     fieldsToShare.forEach((field) => {
-      if (userPreferences[field]) {
-        interviewData[field] = userPreferences[field];
+      if ((preferences as any)[field]) {
+        interviewData[field] = (preferences as any)[field];
       }
     });
 
@@ -107,12 +65,10 @@ export async function GET(
       linkInfo: {
         created_at: link.created_at,
         expires_at: link.expires_at,
-        access_count: link.access_count,
+        access_count: (link.access_count || 0) + 1,
       },
     });
   } catch (error) {
-    console.error("Error in share API:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return handleApiError(error, "Failed to fetch shared story");
   }
 }
-
