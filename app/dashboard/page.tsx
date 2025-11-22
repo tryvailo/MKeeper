@@ -430,7 +430,7 @@ export default function DashboardPage() {
                   <>
                     {previewText ? (
                       <div className="bg-[#FDFBF7] p-4 rounded-lg border border-orange-100 mb-4 italic text-gray-600 text-sm relative">
-                        <span className="text-4xl text-orange-200 absolute -top-2 -left-2">"</span>
+                        <span className="text-4xl text-orange-200 absolute -top-2 -left-2">&quot;</span>
                         <p className="relative z-10 pl-2">
                           {previewText.length > 150 
                             ? `${previewText.substring(0, 150)}...` 
@@ -439,7 +439,7 @@ export default function DashboardPage() {
                       </div>
                     ) : (
                       <div className="bg-[#FDFBF7] p-4 rounded-lg border border-orange-100 mb-4 italic text-gray-600 text-sm relative">
-                        <span className="text-4xl text-orange-200 absolute -top-2 -left-2">"</span>
+                        <span className="text-4xl text-orange-200 absolute -top-2 -left-2">&quot;</span>
                         <p className="relative z-10 pl-2">Their story is being written...</p>
                       </div>
                     )}
