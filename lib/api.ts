@@ -156,7 +156,6 @@ export async function saveUserPreferences(preferences: Partial<Preferences>): Pr
   }
 
   const supabase = await createClient();
-  let data, error;
   
   // Merge interview data with existing if it exists
   // Always merge to preserve existing answers that weren't updated
